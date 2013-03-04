@@ -31,7 +31,7 @@ def formatSeparatorLine(refWindow):
     canvas[canvasCoords % 10 == 5] = "+"
     return canvas.tostring()
 
-def formatAlignedRead(refWindow, cmpH5, rowNumber):
+def formatAlignedRead(cmpH5, refWindow, rowNumber):
     canvas = np.zeros(refWindow.end - refWindow.start, dtype="S1")
     canvas[:] = " "
     clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
@@ -42,7 +42,9 @@ def formatAlignedRead(refWindow, cmpH5, rowNumber):
         noInsertionsRead
     return canvas.tostring()
 
-def formatUnalignedRead(refWindow, cmpH5, rowNumber, useColor=False):
+def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
+    # FIXME!  This code is incorrect for reads that start partway through the window!
+    # Ex, reads 14 and 1784 from ref000001:1-100 of job 038537
     clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
     alnRead = clippedRead.read(orientation="genomic")
     transcript = clippedRead.transcript(orientation="genomic")
@@ -52,12 +54,12 @@ def formatUnalignedRead(refWindow, cmpH5, rowNumber, useColor=False):
         elif transcriptChar in "I": output += formatRed(useColor, readChar.lower())
     return output
 
-def formatAlignedReads(refWindow, cmpH5, rowNumbers):
-    return [ formatAlignedRead(refWindow, cmpH5, rowNumber)
+def formatAlignedReads(cmpH5, refWindow, rowNumbers):
+    return [ formatAlignedRead(cmpH5, refWindow, rowNumber)
              for rowNumber in rowNumbers ]
 
-def formatUnalignedReads(refWindow, cmpH5, rowNumbers, useColor=False):
-    return [ formatUnalignedRead(refWindow, cmpH5, rowNumber, useColor)
+def formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
+    return [ formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor)
              for rowNumber in rowNumbers ]
 
 def formatWindow(cmpH5, refWindow, rowNumbers,
@@ -76,9 +78,9 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
     print preMargin + formatSeparatorLine(refWindow)
 
     if aligned:
-        formattedReads = formatAlignedReads(refWindow, cmpH5, rowNumbers)
+        formattedReads = formatAlignedReads(cmpH5, refWindow, rowNumbers)
     else:
-        formattedReads = formatUnalignedReads(refWindow, cmpH5, rowNumbers, useColor)
+        formattedReads = formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor)
 
     for rn, ar in zip(rowNumbers, formattedReads):
         print ("%8d  " % rn)  + ar

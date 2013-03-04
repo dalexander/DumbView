@@ -22,7 +22,7 @@ def parseOptions():
     parser.add_argument("--columns", type=str, nargs="+", default=None)
     parser.add_argument("--unaligned", "-u", dest="aligned", action="store_false")
     parser.add_argument("--aligned",   "-a", dest="aligned", action="store_true", default=True)
-    parser.add_argument("--sorting", choices=["fileorder", "longest", "spanning"],
+    parser.add_argument("--sorting", "-s", choices=["fileorder", "longest", "spanning"],
                         default="longest")
 
     class ColorAction(argparse.Action):
