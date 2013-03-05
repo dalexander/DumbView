@@ -127,7 +127,7 @@ def find_k_spanned_intervals(refWindow, k, start, end):
     y = 0
     intervalsFound = []
 
-    while y < refWindow.end:
+    while y < winEnd:
         # Step 1: let x be the first pos >= y that is k-covered
         eligible = np.flatnonzero((positions >= y) & (coverage >= k))
         if len(eligible) > 0:
