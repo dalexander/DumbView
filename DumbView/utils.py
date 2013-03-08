@@ -113,11 +113,10 @@ def find_k_spanned_intervals(refWindow, k, start, end):
     """
     assert k >= 1
 
-
     # Translate the start, end to coordinate system where
     # refWindow.start is 0.
-    start -= refWindow.start
-    end   -= refWindow.start
+    start = start - refWindow.start
+    end   = end - refWindow.start
     winStart = 0
     winEnd   = refWindow.end - refWindow.start
     positions = np.arange(winEnd - winStart, dtype=int)
