@@ -2,7 +2,7 @@
 import numpy as np
 from nose.tools import assert_equals
 
-from DumbView.utils import find_k_spanned_intervals
+from DumbView.utils import find_k_spanned_intervals, abut
 
 
 class Window(object):
@@ -66,3 +66,12 @@ def test_intervals_5():
                   find_k_spanned_intervals(refWindow, 2, start, end))
     assert_equals([],
                   find_k_spanned_intervals(refWindow, 3, start, end))
+
+
+
+def test_abut():
+    """
+    Test abutting adjacent intervals
+    """
+    ints = [(s, s+1) for s in range(10)] + [(s, s+1) for s in range(20,30)]
+    assert_equals([(0, 10), (20, 30)], abut(ints))

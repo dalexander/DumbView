@@ -149,3 +149,21 @@ def find_k_spanned_intervals(refWindow, k, start, end):
     # Translate intervals back
     return [ (s + refWindow.start,
               e + refWindow.start) for (s, e) in intervalsFound ]
+
+
+def abut(intervals):
+    """
+    Abut adjacent intervals.  Useful for debugging...
+    """
+    output = []
+    lastS = None
+    lastE = None
+    for (s, e) in intervals:
+        if s == lastE:
+            lastS, lastE = lastS, e
+        else:
+            if lastS is not None:
+                output.append((lastS, lastE))
+            lastS, lastE = s, e
+    output.append((lastS, lastE))
+    return output
