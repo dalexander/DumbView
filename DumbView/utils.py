@@ -29,6 +29,14 @@ class Window(object):
     def __repr__(self):
         return "%s:%d-%d" % (self.contigKey, self.start, self.end)
 
+    def __len__(self):
+        return (self.end - self.start)
+
+    def __eq__(self, other):
+        return (self.contigKey == other.contigKey and
+                self.start     == other.start and
+                self.end       == other.end)
+
     @staticmethod
     def fromString(windowString):
         splitOnColon = windowString.split(":")
@@ -51,10 +59,16 @@ class Window(object):
         w.start -= 1
         return w
 
-def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="longest"):
+    def subWindow(start, end):
+        assert start >= self.start
+        assert end   <= self.end
+        return Window(self.contigKey, start, end)
+
+def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorder"):
     """
     Return up to `depthLimit` reads (as row numbers integers) where
     the mapped reference intersects the window.  If depthLimit is None,
+    return all the reads meeting the criteria.
 
     `strategy` can be:
       - "longest" --- get the reads with the longest length in the window
@@ -70,7 +84,6 @@ def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="longest"
 
     contigLocalId = cmpH5.referenceInfo(window.contigKey).ID
 
-    # FIXME: this is slowish ... need to use readLocator nonsense
     rowNumbers = cmpH5.readsInRange(contigLocalId, window.start, window.end,
                                     justIndices=True)
 
@@ -91,7 +104,7 @@ def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="longest"
 
 
 
-def find_k_spanned_intervals(refWindow, k, start, end):
+def kSpannedIntervals(refWindow, k, start, end):
     """
     Find intervals in the window that are k-spanned by the reads.
 
@@ -166,4 +179,22 @@ def abut(intervals):
                 output.append((lastS, lastE))
             lastS, lastE = s, e
     output.append((lastS, lastE))
+    return output
+
+
+def holes(refWindow, intervals):
+    """
+    Given a window and a set of disjoint subintervals, return the
+    "holes", which are the intervals of the refWindow not covered by
+    the given subintervals.
+    """
+    output = []
+    intervals = sorted(intervals)
+    lastE = refWindow.start
+    for (s, e) in intervals:
+        if s > lastE:
+            output.append((lastE, s))
+        lastE = e
+    if lastE < refWindow.end:
+        output.append((lastE, refWindow.end))
     return output
