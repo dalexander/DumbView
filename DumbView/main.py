@@ -8,8 +8,8 @@ from pbcore.io import CmpH5Reader, FastaReader, GffReader
 from DumbView.format import *
 from DumbView.utils import *
 
-def loadReferences(fastaFilename):
-    return SuperReferenceTable(fastaFilename)
+def loadReferences(fastaFilename, cmpH5):
+    return SuperReferenceTable(fastaFilename, cmpH5)
 
 def parseOptions():
     parser = argparse.ArgumentParser(description="View alignments")
@@ -74,7 +74,7 @@ def mainGff(options):
     print cmpH5Fname
 
     cmpH5 = CmpH5Reader(cmpH5Fname)
-    referenceTable = loadReferences(referenceFname)
+    referenceTable = loadReferences(referenceFname, cmpH5)
 
     for gffRecord in reader:
         referenceSeq = gffRecord.attributes.get("reference", "-")
@@ -85,10 +85,8 @@ def mainGff(options):
         refWindow = Window(gffRecord.seqid,
                            gffRecord.start - 10,
                            gffRecord.end   + 10)
-        # rowNumbers = rowNumbersForWindow(cmpH5, refWindow,
-        #                                  options.depth, minMapQV=options.minMapQV)
 
-        rowNumbersForWindow = readsInWindow(cmpH5, refWindow, options.depth,
+        rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
                                             minMapQV=options.minMapQV, strategy=options.sorting)
 
         formatWindow(cmpH5, refWindow, rowNumbers, referenceTable,
@@ -107,7 +105,7 @@ def mainCmpH5(options):
                                    minMapQV=options.minMapQV, strategy=options.sorting)
 
     if options.referenceFilename:
-        referenceTable = loadReferences(options.referenceFilename)
+        referenceTable = loadReferences(options.referenceFilename, cmpH5)
     else:
         referenceTable = None
 

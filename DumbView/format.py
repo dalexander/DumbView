@@ -65,8 +65,7 @@ def formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
 def formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable=None, aligned=True, useColor=True):
     if referenceTable:
-        referenceContig = referenceTable.byKey(cmpH5.referenceInfo(refWindow.name),
-                                               refWindow.contigKey)
+        referenceContig = referenceTable.byKey(refWindow.contigKey).sequence
         referenceInWindow = referenceContig[refWindow.start:refWindow.end]
     else:
         referenceInWindow = None
