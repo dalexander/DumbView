@@ -16,13 +16,11 @@ class QuiverConfig(object):
                  maxIterations=20,
                  refineDinucleotideRepeats=True,
                  noEvidenceConsensus=noCallAsConsensus,
-                 model=None,
-                 parameters=None
-                 ccQuiverConfig=None):
+                 parameters=None):
 
         self.minMapQV                   = minMapQV
-        self.minPoaCoverage             = maxPoaCoverage
-        self.maxPoaCoverage             = minPoaCoverage
+        self.minPoaCoverage             = minPoaCoverage
+        self.maxPoaCoverage             = maxPoaCoverage
         self.mutationSeparation         = mutationSeparation
         self.maxIterations              = maxIterations
         self.refineDinucleotideRepeats  = refineDinucleotideRepeats
@@ -31,12 +29,14 @@ class QuiverConfig(object):
 
         # Convenience
         self.model                      = self.parameters.model
+        self.ccQuiverConfig             = self.parameters.quiverConfig
+
 
     @staticmethod
     def fromOptions(options, cmpH5):
         pass
 
-def quiverConsensusForWindow(cmpH5, refWindow, referenceTable,
+def quiverConsensusForWindow(cmpH5, refWindow, referenceContig,
                              depthLimit, quiverConfig):
     """
     High-level routine for calling the consensus for a
@@ -49,10 +49,9 @@ def quiverConsensusForWindow(cmpH5, refWindow, referenceTable,
     """
     # 1) identify the intervals with adequate coverage for quiver
     #    consensus; restrict to intervals of length > 10
-    refContig = referenceTable[refWindow.contigKey].sequence
     allRows = readsInWindow(cmpH5, refWindow, minMapQV=quiverConfig.minMapQV)
-    starts = cmpH5.alnIndex.tStart[allRows]
-    ends   = cmpH5.allRows.tEnd[allRows]
+    starts = cmpH5.tStart[allRows]
+    ends   = cmpH5.tEnd[allRows]
     intervals = [ (s, e)
                   for (s, e) in kSpannedIntervals(refWindow,
                                                   quiverConfig.minPoaCoverage,
@@ -68,24 +67,29 @@ def quiverConsensusForWindow(cmpH5, refWindow, referenceTable,
     # 3) call quiverConsensusForRows on the interval
     subConsensi = []
     for interval in allIntervals:
+        intStart, intEnd = interval
+        intRefSeq = referenceContig[intStart:intEnd]
+        subWindow = refWindow.subWindow(*interval)
+
         if interval in coverageGaps:
-            refSeq = refContig[refWindow.start:refWindow.end]
-            cssSeq = quiverConfig.noEvidenceConsensus(refSeq)
-            css = Consensus(refWindow,
+            cssSeq = quiverConfig.noEvidenceConsensus(intRefSeq)
+            css = Consensus(subWindow,
                             cssSeq,
-                            [0]*len(refWindow),
-                            [0]*len(refWindow))
+                            [0]*len(cssSeq),
+                            [0]*len(cssSeq))
         else:
+
+            windowRefSeq = referenceContig[intStart:intEnd]
             rows = readsInWindow(cmpH5, subWindow,
                                  depthLimit=depthLimit,
                                  minMapQV=quiverConfig.minMapQV,
-                                 strategy="largest")
+                                 strategy="longest")
 
             # TODO: Some further filtering: remove "stumpy reads"
             alns = cmpH5[rows]
             clippedAlns = [ aln.clippedTo(*interval) for aln in alns ]
-
-            css = quiverConsensusForAlignments(refWindow.subWindow(*interval),
+            css = quiverConsensusForAlignments(subWindow,
+                                               intRefSeq,
                                                clippedAlns,
                                                quiverConfig)
         subConsensi.append(css)
@@ -107,24 +111,21 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
 
     refSequence is reference within window.
     Q: is it needed for anything beyond reporting?
+       if not, we should remove it from prototype
 
     Clipping has already been done!
-
-    TODO: not handling the domain/interior properly here!
     """
-    # alns are MappedSmrtAlignments... of which the only subclass is
-    # CmpH5Alignment
     # (The buck stops here.  Call consensus on this interval, no recursing)
     refStart = refWindow.start
     refEnd   = refWindow.end
 
     # Compute the POA consensus, which is our initial guess, and
     # should typically be > 99.5% accurate
-    sequencesForPoa = [ a.read(orientation="genomic", aligned=False)
-                        if a.spansReferenceRange(refStart, refEnd)
-                        for a in spanningAlns ][:quiverConfig.maxPoaCoverage]
-    assert len(sequencesForPoa) >= quiverConfig.minPoaCoverage
-    p = cc.PoaConsensus.FindConsensus(sequencesForPoa)
+    fwdSequences = [ a.read(orientation="genomic", aligned=False)
+                     for a in alns
+                     if a.spansReferenceRange(refStart, refEnd) ]
+    assert len(fwdSequences) >= quiverConfig.minPoaCoverage
+    p = cc.PoaConsensus.FindConsensus(fwdSequences[:quiverConfig.maxPoaCoverage])
     ga = cc.Align(refSequence, p.Sequence())
     numPoaVariants = ga.Errors()
     poaCss = p.Sequence()
@@ -134,7 +135,7 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
     mappedReads = [ quiverConfig.model.extractMappedRead(aln, refStart)
                     for aln in alns ]
     queryPositions = cc.TargetToQueryPositions(ga)
-    mappedReads = [ lifted(queryPositions, mr) for mr in mappedReads ]
+    mappedReads = [ qutils.lifted(queryPositions, mr) for mr in mappedReads ]
 
     # Load the mapped reads into the mutation scorer, and iterate
     # until convergence.
@@ -144,7 +145,16 @@ def quiverConsensusForAlignments(refWindow, refSequence, alns, quiverConfig):
 
     # Iterate until covergence
     # TODO: pass quiverConfig down here.
-    _, quiverConverged = refineConsensus(mms)
+    _, quiverConverged = qutils.refineConsensus(mms)
     if quiverConfig.refineDinucleotideRepeats:
-        refineDinucleotideRepeats(mms)
+        qutils.refineDinucleotideRepeats(mms)
     quiverCss = mms.Template()
+
+    # TODO: calculate confidence here
+    confidence = [0] * len(quiverCss)
+    coverage   = [0] * len(quiverCss)
+
+    return Consensus(refWindow,
+                     quiverCss,
+                     confidence,
+                     coverage)

@@ -59,7 +59,7 @@ class Window(object):
         w.start -= 1
         return w
 
-    def subWindow(start, end):
+    def subWindow(self, start, end):
         assert start >= self.start
         assert end   <= self.end
         return Window(self.contigKey, start, end)
@@ -126,12 +126,18 @@ def kSpannedIntervals(refWindow, k, start, end):
     """
     assert k >= 1
 
+
     # Translate the start, end to coordinate system where
     # refWindow.start is 0.
     start = start - refWindow.start
     end   = end - refWindow.start
     winStart = 0
     winEnd   = refWindow.end - refWindow.start
+
+    # Truncate to bounds implied by refWindow
+    start = np.maximum(winStart, start)
+    end   = np.minimum(winEnd,   end)
+
     positions = np.arange(winEnd - winStart, dtype=int)
     coverage = projectIntoRange(start, end,
                                 winStart, winEnd)
