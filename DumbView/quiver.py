@@ -63,8 +63,11 @@ def quiverConsensusForWindow(cmpH5, refWindow, referenceContig,
     allIntervals = sorted(intervals + coverageGaps)
     assert holes(refWindow, allIntervals) == []
 
+    print allIntervals
+
+
     # 2) pull out the reads we will use for each interval
-    # 3) call quiverConsensusForRows on the interval
+    # 3) call quiverConsensusForAlignments on the interval
     subConsensi = []
     for interval in allIntervals:
         intStart, intEnd = interval

@@ -19,7 +19,7 @@ class Consensus(object):
 #
 
 def noCallAsConsensus(referenceSequence):
-    return "N" * len(refWindow)
+    return "N" * len(referenceSequence)
 
 def referenceAsConsensus(referenceSequence):
     return referenceSequence.upper()
