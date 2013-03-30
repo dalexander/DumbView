@@ -7,6 +7,7 @@ import argparse, numpy as np, os, shlex, sys
 from pbcore.io import CmpH5Reader, FastaReader, GffReader
 from DumbView.format import *
 from DumbView.utils import *
+from DumbView.Window import *
 
 def loadReferences(fastaFilename, cmpH5):
     return SuperReferenceTable(fastaFilename, cmpH5)
@@ -14,7 +15,7 @@ def loadReferences(fastaFilename, cmpH5):
 def parseOptions():
     parser = argparse.ArgumentParser(description="View alignments")
     parser.add_argument("inputFilename", type=str, help=".cmp.h5 or .gff filename")
-    parser.add_argument("--referenceWindow", "-w", type=Window.fromGffString, default=None)
+    parser.add_argument("--referenceWindow", "-w", type=windowFromGffString, default=None)
     parser.add_argument("--referenceFilename", "-r", default=None)
     parser.add_argument("--depth", "-X", type=int, default=20)
     parser.add_argument("--minMapQV", "-m", type=int, default=10)
@@ -82,20 +83,19 @@ def mainGff(options):
         variantSummary = "(%s > %s)" % (referenceSeq, variantSeq)
         print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, variantSummary
         refId = cmpH5.referenceInfo(gffRecord.seqid).ID
-        refWindow = Window(gffRecord.seqid,
+        refWindow = Window(refId,
                            gffRecord.start - 10,
                            gffRecord.end   + 10)
-
         rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
-                                            minMapQV=options.minMapQV, strategy=options.sorting)
-
+                                   minMapQV=options.minMapQV, strategy=options.sorting)
         formatWindow(cmpH5, refWindow, rowNumbers, referenceTable,
                      aligned=(gffRecord.type != "insertion"))
         print
 
 def mainCmpH5(options):
     cmpH5 = CmpH5Reader(options.inputFilename)
-    refId = cmpH5.referenceInfo(options.referenceWindow.contigKey).ID
+    # Canonicalize window here
+    refId = cmpH5.referenceInfo(options.referenceWindow.refId).ID
     refWindow = options.referenceWindow
 
     if options.rowNumbers != None:
