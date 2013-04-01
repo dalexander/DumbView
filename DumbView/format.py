@@ -1,4 +1,5 @@
 import numpy as np
+from .consensus import consensus
 
 ANSI_RED   = "\x1b[31m"
 ANSI_RESET = "\x1b[39m"
@@ -62,10 +63,15 @@ def formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
     return [ formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor)
              for rowNumber in rowNumbers ]
 
+def formatConsensus(cmpH5, refWindow, rowNumbers, refTable):
+    cssObj = consensus(cmpH5, refWindow, rowNumbers, refTable)
+    preMargin = " " * 10
+    print preMargin + cssObj.sequence
+
 def formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable=None, aligned=True, useColor=True):
     if referenceTable:
-        referenceContig = referenceTable.byKey(refWindow.contigKey).sequence
+        referenceContig = referenceTable.byKey(refWindow.refId).sequence
         referenceInWindow = referenceContig[refWindow.start:refWindow.end]
     else:
         referenceInWindow = None
@@ -83,3 +89,7 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
 
     for rn, ar in zip(rowNumbers, formattedReads):
         print ("%8d  " % rn)  + ar
+
+    if referenceTable:
+        print preMargin + formatSeparatorLine(refWindow)
+        formatConsensus(cmpH5, refWindow, rowNumbers, referenceTable)
