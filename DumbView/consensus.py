@@ -29,9 +29,6 @@ def consensus(cmpH5, refWindow, rowNumbers, referenceTable):
     coveredIntervals = qu.kSpannedIntervals(eWindow, K, tStart, tEnd)
     holes = qu.holes(eWindow, coveredIntervals)
 
-    print coveredIntervals
-    print holes
-
     for interval in sorted(coveredIntervals + holes):
         subWin = qu.subWindow(eWindow, interval)
         intStart, intEnd = interval
