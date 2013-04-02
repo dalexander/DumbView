@@ -3,22 +3,6 @@ import numpy as np
 from pbcore.io import ReferenceTable
 from pbcore.io.rangeQueries import projectIntoRange
 
-class SuperReferenceTable(ReferenceTable):
-    def byKey(self, key):
-        """
-        Lookup key by: (1) name, (2) localId (3) localId as int if int-convertible
-        """
-        try: return self.byName(key)
-        except: pass
-        try: return self.byLocalId(key)
-        except: pass
-        try: return self.byLocalId(int(key))
-        except:
-            raise KeyError("Contig not found")
-
-    def keyToLocalId(self, key):
-        return self.byKey(key).localId
-
 def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorder"):
     """
     Return up to `depthLimit` reads (as row numbers integers) where

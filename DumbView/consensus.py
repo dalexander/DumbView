@@ -8,18 +8,18 @@ K = 3
 quiverConfig = q.QuiverConfig()
 overlap = 5
 
-def enlargedReferenceWindow(refWin, refContig, overlap):
+def enlargedReferenceWindow(refWin, contigLength, overlap):
     refId, refStart, refEnd = refWin
-    contigLength = len(refContig)
     return Window(refId,
                   max(0, refStart - overlap),
                   min(refEnd + overlap + 1, contigLength))
 
 def consensus(cmpH5, refWindow, rowNumbers, referenceTable):
     # identify the enlarged interval [-5, +5]
-    refContig = referenceTable.byKey(refWindow.refId).sequence
-    eWindow = enlargedReferenceWindow(refWindow, refContig, overlap)
-    refSeqInEnlargedWindow = refContig[eWindow.start:eWindow.end]
+    refName = cmpH5.referenceInfo(refWindow.refId).FullName
+    refLength = referenceTable.length(refName)
+    eWindow = enlargedReferenceWindow(refWindow, refLength, overlap)
+    refSeqInEnlargedWindow = referenceTable.sequence(refName, eWindow.start, eWindow.end)
 
     # find 3-spanned intervals in the enlarged interval
     # call css for each interval
@@ -35,7 +35,7 @@ def consensus(cmpH5, refWindow, rowNumbers, referenceTable):
     for interval in sorted(coveredIntervals + holes):
         subWin = qu.subWindow(eWindow, interval)
         intStart, intEnd = interval
-        intRefSeq = refContig[intStart:intEnd]
+        intRefSeq = refSeqInEnlargedWindow[intStart-eWindow.start:intEnd-eWindow.start]
 
         if interval in coveredIntervals:
             clippedAlns = [ aln.clippedTo(*interval)

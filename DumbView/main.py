@@ -8,9 +8,10 @@ from pbcore.io import CmpH5Reader, FastaReader, GffReader
 from DumbView.format import *
 from DumbView.utils import *
 from DumbView.Window import *
+from DumbView.FastaTable import *
 
 def loadReferences(fastaFilename, cmpH5):
-    return SuperReferenceTable(fastaFilename, cmpH5)
+    return FastaTable(fastaFilename)
 
 def parseOptions():
     parser = argparse.ArgumentParser(description="View alignments")

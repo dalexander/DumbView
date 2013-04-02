@@ -71,8 +71,8 @@ def formatConsensus(cmpH5, refWindow, rowNumbers, refTable):
 def formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable=None, aligned=True, useColor=True):
     if referenceTable:
-        referenceContig = referenceTable.byKey(refWindow.refId).sequence
-        referenceInWindow = referenceContig[refWindow.start:refWindow.end]
+        refName = cmpH5.referenceInfo(refWindow.refId).FullName
+        referenceInWindow = referenceTable.sequence(refName, refWindow.start, refWindow.end)
     else:
         referenceInWindow = None
 
