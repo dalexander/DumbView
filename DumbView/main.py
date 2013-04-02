@@ -3,7 +3,7 @@
 # Will be migrated to pbh5tools when possible.
 #
 
-import argparse, numpy as np, os, shlex, sys
+import argparse, cProfile, numpy as np, os, shlex, pstats, sys
 from pbcore.io import CmpH5Reader, FastaReader, GffReader
 from DumbView.format import *
 from DumbView.utils import *
@@ -26,6 +26,7 @@ def parseOptions():
     parser.add_argument("--aligned",   "-a", dest="aligned", action="store_true", default=True)
     parser.add_argument("--sorting", "-s", choices=["fileorder", "longest", "spanning"],
                         default="longest")
+    parser.add_argument("--profile", action="store_true", dest="doProfiling")
 
     class ColorAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
@@ -113,8 +114,7 @@ def mainCmpH5(options):
     formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable, options.aligned, options.color)
 
-
-def main():
+def _main(options):
     options = parseOptions()
     if options.inputFilename.endswith(".cmp.h5"):
         mainCmpH5(options)
@@ -123,3 +123,11 @@ def main():
     else:
         print "Invalid input filename!"
         sys.exit(1)
+
+def main():
+    options = parseOptions()
+    if options.doProfiling:
+        cProfile.runctx("_main(options)", globals(), locals(), "profile.out")
+        pstats.Stats("profile.out").sort_stats("cumulative").print_stats(20)
+    else:
+        _main(options)
