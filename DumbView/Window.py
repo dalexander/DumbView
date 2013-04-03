@@ -23,6 +23,16 @@ def windowFromGffString(windowString):
     w = windowFromString(windowString)
     return w._replace(start=w.start-1)
 
+def subWindow(refWindow, subinterval):
+    winId, winStart, winEnd = refWindow
+    intS, intE = subinterval
+    assert intS >= winStart
+    assert intE <= winEnd
+    return refWindow._replace(start=intS, end=intE)
+
+
+# -------- Utility functions ---------
+
 def integerValue(s):
     try:
         return int(s)

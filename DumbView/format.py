@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+SPARKS = u' ▁▂▃▄▅▆▇'
+
 import numpy as np
 from .consensus import consensus
 
@@ -65,8 +69,8 @@ def formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
 
 def formatConsensus(cmpH5, refWindow, rowNumbers, refTable):
     cssObj = consensus(cmpH5, refWindow, rowNumbers, refTable)
-    preMargin = " " * 10
-    print preMargin + cssObj.sequence
+    print "     CSS  " + cssObj.sequence
+    print " " * 10 + spark(cssObj.confidence)
 
 def formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable=None, aligned=True, useColor=True):
@@ -91,5 +95,14 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
         print ("%8d  " % rn)  + ar
 
     if referenceTable:
+        print
+        print preMargin + formatReferenceCoordinates(refWindow)
         print preMargin + formatSeparatorLine(refWindow)
-        formatConsensus(cmpH5, refWindow, rowNumbers, referenceTable)
+        print "     Ref  " + referenceInWindow
+        #formatConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
+        formatConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
+
+def spark(arr):
+    idx = (np.array(arr, dtype=np.uint)/8).clip(0, 8)
+    #print idx
+    return "".join(SPARKS[i] for i in idx)

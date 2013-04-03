@@ -3,6 +3,7 @@ from GenomicConsensus.quiver import utils  as qu
 from GenomicConsensus.consensus import *
 import ConsensusCore as cc
 from .Window import *
+from .utils import readsInWindow
 
 K = 3
 quiverConfig = q.QuiverConfig()
@@ -14,11 +15,12 @@ def enlargedReferenceWindow(refWin, contigLength, overlap):
                   max(0, refStart - overlap),
                   min(refEnd + overlap + 1, contigLength))
 
-def consensus(cmpH5, refWindow, rowNumbers, referenceTable):
+def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
     # identify the enlarged interval [-5, +5]
     refName = cmpH5.referenceInfo(refWindow.refId).FullName
     refLength = referenceTable.length(refName)
     eWindow = enlargedReferenceWindow(refWindow, refLength, overlap)
+    refSeqInWindow = referenceTable.sequence(refName, refWindow.start, refWindow.end)
     refSeqInEnlargedWindow = referenceTable.sequence(refName, eWindow.start, eWindow.end)
 
     # find 3-spanned intervals in the enlarged interval
@@ -30,17 +32,21 @@ def consensus(cmpH5, refWindow, rowNumbers, referenceTable):
     holes = qu.holes(eWindow, coveredIntervals)
 
     for interval in sorted(coveredIntervals + holes):
-        subWin = qu.subWindow(eWindow, interval)
+        subWin = subWindow(eWindow, interval)
+        print subWin
         intStart, intEnd = interval
-        intRefSeq = refSeqInEnlargedWindow[intStart-eWindow.start:intEnd-eWindow.start]
-
+        intRefSeq = refSeqInEnlargedWindow[intStart-eWindow.start:
+                                           intEnd-eWindow.start]
         if interval in coveredIntervals:
-            clippedAlns = [ aln.clippedTo(*interval)
-                            for aln in cmpH5[rowNumbers] ]
+            rows = readsInWindow(cmpH5, subWin,
+                                 depthLimit=100,
+                                 minMapQV=quiverConfig.minMapQV,
+                                 strategy="longest")
+            clippedAlns = [ aln.clippedTo(*interval) for aln in cmpH5[rows]]
             css_ = qu.quiverConsensusForAlignments(subWin,
-                                                  intRefSeq,
-                                                  clippedAlns,
-                                                  quiverConfig)
+                                                   intRefSeq,
+                                                   clippedAlns,
+                                                   quiverConfig)
         else:
             css_ = noCallAsConsensus(subWin, intRefSeq)
 
@@ -50,16 +56,23 @@ def consensus(cmpH5, refWindow, rowNumbers, referenceTable):
     css = join(subConsensi)
 
     # align css back to refWindow, and clip
-    ga = cc.Align(refSeqInEnlargedWindow, css_.sequence)
+    ga = cc.Align(refSeqInEnlargedWindow, css.sequence)
     targetPositions = cc.TargetToQueryPositions(ga)
     cssStart = targetPositions[refWindow.start-eWindow.start]
     cssEnd   = targetPositions[refWindow.end-eWindow.start]
 
-    cssSequence    = css_.sequence[cssStart:cssEnd]
-    cssQv          = css_.confidence[cssStart:cssEnd]
+    cssSequence    = css.sequence[cssStart:cssEnd]
+    cssQv          = css.confidence[cssStart:cssEnd]
+
+    # # for display
+    # ga = cc.AlignWithAffineGapPenalty(refSeqInWindow, cssSequence)
+    # print
+    # print ga.Target()
+    # print ga.Transcript()
+    # print ga.Query()
+    # print
 
     consensusObj = Consensus(refWindow,
                              cssSequence,
                              cssQv)
-
     return consensusObj
