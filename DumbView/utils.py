@@ -1,7 +1,11 @@
 
-import numpy as np
+import numpy as np, sys
 from pbcore.io import ReferenceTable
 from pbcore.io.rangeQueries import projectIntoRange
+
+def die(msg):
+    print msg
+    sys.exit(-1)
 
 def readsInWindow(cmpH5, window, depthLimit=None, minMapQV=0, strategy="fileorder"):
     """

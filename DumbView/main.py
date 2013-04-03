@@ -15,7 +15,7 @@ def loadReferences(fastaFilename, cmpH5):
 
 def parseOptions():
     parser = argparse.ArgumentParser(description="View alignments")
-    parser.add_argument("inputFilename", type=str, help=".cmp.h5 or .gff filename")
+    parser.add_argument("inputFilenames", nargs="+", type=str, help=".cmp.h5 or .gff filename, or both")
     parser.add_argument("--referenceWindow", "-w", type=windowFromGffString, default=None)
     parser.add_argument("--referenceFilename", "-r", default=None)
     parser.add_argument("--depth", "-X", type=int, default=20)
@@ -24,8 +24,7 @@ def parseOptions():
     parser.add_argument("--columns", type=str, nargs="+", default=None)
     parser.add_argument("--unaligned", "-u", dest="aligned", action="store_false")
     parser.add_argument("--aligned",   "-a", dest="aligned", action="store_true", default=True)
-    parser.add_argument("--sorting", "-s", choices=["fileorder", "longest", "spanning"],
-                        default="longest")
+    parser.add_argument("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
     parser.add_argument("--profile", action="store_true", dest="doProfiling")
 
     class ColorAction(argparse.Action):
@@ -43,38 +42,50 @@ def parseOptions():
                         action=ColorAction, default=os.isatty(1))
 
     options = parser.parse_args()
+    options.inputGff  = None
+    options.inputCmpH5 = None
+    for fname in options.inputFilenames:
+        if fname.endswith(".gff") or fname.endswith(".gff.gz"):
+            options.inputGff = fname
+        elif fname.endswith(".cmp.h5"):
+            options.inputCmpH5 = fname
+        else:
+            die("Invalid input file")
+
     return options
 
-
-def extractCmpH5AndReferenceFromGffHeader(header):
+def extractCmpH5AndReferenceFromGff(gffReader):
     # This code is a horrible hack and an affront to good taste and I
     # blame Python's stdlib for making this the way I had to do it.
-    assert header.startswith("##source-commandline")
     cmpH5 = None
     reference = None
-    args = shlex.split(header)
-    for flag in ["-r", "--referenceFilename"]:
-        if flag in args:
-            reference = args[args.index(flag) + 1]
-            break
-        else:
-            for arg in args:
-                if arg.startswith(flag):
-                    reference = arg.split("=")[1]
+    for header in gffReader.headers:
+        if header.startswith("##source-commandline"):
+            args = shlex.split(header)
+            for flag in ["-r", "--referenceFilename"]:
+                if flag in args:
+                    reference = args[args.index(flag) + 1]
                     break
-    for arg in args:
-        if arg.endswith(".cmp.h5"):
-            cmpH5 = arg
-            break
+                else:
+                    for arg in args:
+                        if arg.startswith(flag):
+                            reference = arg.split("=")[1]
+                            break
+            for arg in args:
+                if arg.endswith(".cmp.h5"):
+                    cmpH5 = arg
+                    break
     return cmpH5, reference
 
 def mainGff(options):
-    reader = GffReader(options.inputFilename)
-    for header in reader.headers:
-        if header.startswith("##source-commandline"):
-            cmpH5Fname, referenceFname = extractCmpH5AndReferenceFromGffHeader(header)
+    reader = GffReader(options.inputGff)
+    cmpH5Fname, referenceFname = extractCmpH5AndReferenceFromGff(reader)
+    # Allow overriding
+    cmpH5Fname = options.inputCmpH5 or cmpH5Fname
+    referenceFname = options.referenceFilename or referenceFname
 
-    print cmpH5Fname
+    assert cmpH5Fname
+    assert referenceFname
 
     cmpH5 = CmpH5Reader(cmpH5Fname)
     referenceTable = loadReferences(referenceFname, cmpH5)
@@ -95,10 +106,9 @@ def mainGff(options):
         print
 
 def mainCmpH5(options):
-    cmpH5 = CmpH5Reader(options.inputFilename)
-    # Canonicalize window here
+    cmpH5 = CmpH5Reader(options.inputCmpH5)
     refId = cmpH5.referenceInfo(options.referenceWindow.refId).ID
-    refWindow = options.referenceWindow
+    refWindow = options.referenceWindow._replace(refId=refId)
 
     if options.rowNumbers != None:
         rowNumbers = options.rowNumbers
@@ -116,13 +126,10 @@ def mainCmpH5(options):
 
 def _main(options):
     options = parseOptions()
-    if options.inputFilename.endswith(".cmp.h5"):
-        mainCmpH5(options)
-    elif options.inputFilename.endswith(".gff"):
+    if any([fn.endswith(".gff") for fn in options.inputFilenames]):
         mainGff(options)
     else:
-        print "Invalid input filename!"
-        sys.exit(1)
+        mainCmpH5(options)
 
 def main():
     options = parseOptions()
