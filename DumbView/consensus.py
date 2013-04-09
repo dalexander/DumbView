@@ -33,7 +33,7 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
 
     for interval in sorted(coveredIntervals + holes):
         subWin = subWindow(eWindow, interval)
-        print subWin
+        #print subWin
         intStart, intEnd = interval
         intRefSeq = refSeqInEnlargedWindow[intStart-eWindow.start:
                                            intEnd-eWindow.start]
@@ -64,15 +64,14 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
     cssSequence    = css.sequence[cssStart:cssEnd]
     cssQv          = css.confidence[cssStart:cssEnd]
 
-    # # for display
-    # ga = cc.AlignWithAffineGapPenalty(refSeqInWindow, cssSequence)
-    # print
-    # print ga.Target()
-    # print ga.Transcript()
-    # print ga.Query()
-    # print
-
     consensusObj = Consensus(refWindow,
                              cssSequence,
                              cssQv)
     return consensusObj
+
+
+def align(ref, query):
+    ga = cc.AlignWithAffineGapPenalty(ref, query)
+    return (ga.Target(),
+            ga.Transcript(),
+            ga.Query())

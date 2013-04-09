@@ -3,14 +3,17 @@
 SPARKS = u' ▁▂▃▄▅▆▇'
 
 import numpy as np
-from .consensus import consensus
+from .consensus import consensus, align
 
 ANSI_RED   = "\x1b[31m"
+ANSI_GREEN = "\x1b[32m"
 ANSI_RESET = "\x1b[39m"
 
-def formatRed(useColor, txt):
-    if useColor: return ANSI_RED + txt + ANSI_RESET
-    else:        return txt
+def red(txt):
+    return ANSI_RED + txt + ANSI_RESET
+
+def green(txt):
+    return ANSI_GREEN + txt + ANSI_RESET
 
 def formatReferenceCoordinates(refWindow):
     canvas = np.zeros(refWindow.end - refWindow.start, dtype="S1")
@@ -56,7 +59,7 @@ def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
     output = ""
     for (readChar, transcriptChar) in zip(alnRead, transcript):
         if transcriptChar in "MR":  output += readChar
-        elif transcriptChar in "I": output += formatRed(useColor, readChar.lower())
+        elif transcriptChar in "I": output += red(readChar.lower())
     return output
 
 def formatAlignedReads(cmpH5, refWindow, rowNumbers):
@@ -98,11 +101,35 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
         print
         print preMargin + formatReferenceCoordinates(refWindow)
         print preMargin + formatSeparatorLine(refWindow)
-        print "     Ref  " + referenceInWindow
         #formatConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
-        formatConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
+        formatReferenceAndConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
 
 def spark(arr):
     idx = (np.array(arr, dtype=np.uint)/8).clip(0, 8)
     #print idx
     return "".join(SPARKS[i] for i in idx)
+
+def formatReferenceAndConsensus(cmpH5, refWindow, refTable, rowNumbers):
+    refName = cmpH5.referenceInfo(refWindow.refId).FullName
+    cssObj = consensus(cmpH5, refWindow, refTable, rowNumbers)
+    refInWindow = refTable.sequence(refName, refWindow.start, refWindow.end)
+    alnRef, transcript, alnQuery = align(refInWindow, cssObj.sequence)
+
+    refChars = []
+    cssChars = []
+
+    for (r, t, q) in zip(alnRef, transcript, alnQuery):
+        if t == "M":
+            refChars.append(r)
+            cssChars.append(q)
+        elif t == "R":
+            refChars.append(red(r))
+            cssChars.append(green(q))
+        elif t == "I":
+            cssChars.append(green(q))
+        elif t == "D":
+            refChars.append(red(r))
+
+    print "     ref  " + "".join(refChars)
+    print "     css  " + "".join(cssChars)
+    print " " * 10 + spark(cssObj.confidence)
