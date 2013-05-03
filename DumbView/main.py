@@ -91,10 +91,11 @@ def mainGff(options):
     referenceTable = loadReferences(referenceFname, cmpH5)
 
     for gffRecord in reader:
-        referenceSeq = gffRecord.attributes.get("reference", "-")
-        variantSeq   = gffRecord.attributes.get("variantSeq", "-")
+        referenceSeq = gffRecord.get("reference", "-")
+        variantSeq   = gffRecord.get("variantSeq", "-")
+        variantConfidence = gffRecord.confidence
         variantSummary = "(%s > %s)" % (referenceSeq, variantSeq)
-        print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, variantSummary
+        print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, variantSummary, variantConfidence
         refId = cmpH5.referenceInfo(gffRecord.seqid).ID
         refWindow = Window(refId,
                            gffRecord.start - 10,
@@ -126,7 +127,8 @@ def mainCmpH5(options):
 
 def _main(options):
     options = parseOptions()
-    if any([fn.endswith(".gff") for fn in options.inputFilenames]):
+    if any([fn.endswith(".gff") or fn.endswith(".gff.gz")
+            for fn in options.inputFilenames]):
         mainGff(options)
     else:
         mainCmpH5(options)
