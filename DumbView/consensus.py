@@ -37,18 +37,19 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
         intStart, intEnd = interval
         intRefSeq = refSeqInEnlargedWindow[intStart-eWindow.start:
                                            intEnd-eWindow.start]
+        css_ = noCallAsConsensus(subWin, intRefSeq)
         if interval in coveredIntervals:
             rows = readsInWindow(cmpH5, subWin,
                                  depthLimit=100,
                                  minMapQV=quiverConfig.minMapQV,
                                  strategy="longest")
             clippedAlns = [ aln.clippedTo(*interval) for aln in cmpH5[rows]]
-            css_ = qu.quiverConsensusForAlignments(subWin,
-                                                   intRefSeq,
-                                                   clippedAlns,
-                                                   quiverConfig)
-        else:
-            css_ = noCallAsConsensus(subWin, intRefSeq)
+            goodAlns = qu.filterAlnsForQuiver(subWin, clippedAlns, quiverConfig)
+            if len(goodAlns) >= K:
+                css_ = qu.quiverConsensusForAlignments(subWin,
+                                                       intRefSeq,
+                                                       goodAlns,
+                                                       quiverConfig)
 
         subConsensi.append(css_)
 
