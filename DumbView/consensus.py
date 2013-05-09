@@ -1,12 +1,11 @@
-from GenomicConsensus.quiver import quiver as q
-from GenomicConsensus.quiver import utils  as qu
+import GenomicConsensus.quiver as q
 from GenomicConsensus.consensus import *
 import ConsensusCore as cc
 from .Window import *
 from .utils import readsInWindow
 
 K = 3
-quiverConfig = q.QuiverConfig()
+quiverConfig = q.model.QuiverConfig()
 overlap = 5
 
 def enlargedReferenceWindow(refWin, contigLength, overlap):
@@ -28,8 +27,8 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
     subConsensi = []
     tStart = cmpH5.tStart[rowNumbers]
     tEnd   = cmpH5.tEnd[rowNumbers]
-    coveredIntervals = qu.kSpannedIntervals(eWindow, K, tStart, tEnd)
-    holes = qu.holes(eWindow, coveredIntervals)
+    coveredIntervals = q.utils.kSpannedIntervals(eWindow, K, tStart, tEnd)
+    holes = q.utils.holes(eWindow, coveredIntervals)
 
     for interval in sorted(coveredIntervals + holes):
         subWin = subWindow(eWindow, interval)
@@ -44,12 +43,12 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
                                  minMapQV=quiverConfig.minMapQV,
                                  strategy="longest")
             clippedAlns = [ aln.clippedTo(*interval) for aln in cmpH5[rows]]
-            goodAlns = qu.filterAlnsForQuiver(subWin, clippedAlns, quiverConfig)
+            goodAlns = q.utils.filterAlnsForQuiver(subWin, clippedAlns, quiverConfig)
             if len(goodAlns) >= K:
-                css_ = qu.quiverConsensusForAlignments(subWin,
-                                                       intRefSeq,
-                                                       goodAlns,
-                                                       quiverConfig)
+                css_ = q.utils.quiverConsensusForAlignments(subWin,
+                                                            intRefSeq,
+                                                            goodAlns,
+                                                            quiverConfig)
 
         subConsensi.append(css_)
 
