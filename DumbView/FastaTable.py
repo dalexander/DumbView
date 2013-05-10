@@ -22,8 +22,8 @@ def fileOffset(fai, name, pos):
     in the named contig, using the FASTA index.
     """
     faiRecord = fai[name]
-    assert 0 <= pos < faiRecord.length
-    q, r = divmod(pos, faiRecord.lineWidth)
+    cPos = np.clip(pos, 0, faiRecord.length)
+    q, r = divmod(cPos, faiRecord.lineWidth)
     offset = faiRecord.offset + q*faiRecord.stride + r
     return offset
 
