@@ -5,6 +5,7 @@
 
 import argparse, cProfile, numpy as np, os, shlex, pstats, sys
 from pbcore.io import CmpH5Reader, FastaReader, GffReader
+from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
 from DumbView.utils import *
 from DumbView.Window import *
@@ -13,46 +14,6 @@ from DumbView.FastaTable import *
 def loadReferences(fastaFilename, cmpH5):
     return FastaTable(fastaFilename)
 
-def parseOptions():
-    parser = argparse.ArgumentParser(description="View alignments")
-    parser.add_argument("inputFilenames", nargs="+", type=str, help=".cmp.h5 or .gff filename, or both")
-    parser.add_argument("--referenceWindow", "-w", type=windowFromGffString, default=None)
-    parser.add_argument("--referenceFilename", "-r", default=None)
-    parser.add_argument("--depth", "-X", type=int, default=20)
-    parser.add_argument("--minMapQV", "-m", type=int, default=10)
-    parser.add_argument("--rowNumbers", type=int, nargs="+", default=None)
-    parser.add_argument("--columns", type=str, nargs="+", default=None)
-    parser.add_argument("--unaligned", "-u", dest="aligned", action="store_false")
-    parser.add_argument("--aligned",   "-a", dest="aligned", action="store_true", default=True)
-    parser.add_argument("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
-    parser.add_argument("--profile", action="store_true", dest="doProfiling")
-
-    class ColorAction(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
-            if (values == None) or (values == "on"):
-                color = True
-            elif (values == "off"):
-                color = False
-            else:
-                assert values == "auto"
-                color = os.isatty(1)
-            setattr(namespace, self.dest, color)
-
-    parser.add_argument("--color", "-c", nargs="?", choices=["on", "off", "auto"],
-                        action=ColorAction, default=os.isatty(1))
-
-    options = parser.parse_args()
-    options.inputGff  = None
-    options.inputCmpH5 = None
-    for fname in options.inputFilenames:
-        if fname.endswith(".gff") or fname.endswith(".gff.gz"):
-            options.inputGff = fname
-        elif fname.endswith(".cmp.h5"):
-            options.inputCmpH5 = fname
-        else:
-            die("Invalid input file")
-
-    return options
 
 def extractCmpH5AndReferenceFromGff(gffReader):
     # This code is a horrible hack and an affront to good taste and I
@@ -126,17 +87,60 @@ def mainCmpH5(options):
                  referenceTable, options.aligned, options.color)
 
 def _main(options):
-    options = parseOptions()
     if any([fn.endswith(".gff") or fn.endswith(".gff.gz")
             for fn in options.inputFilenames]):
         mainGff(options)
     else:
         mainCmpH5(options)
 
-def main():
-    options = parseOptions()
-    if options.doProfiling:
-        cProfile.runctx("_main(options)", globals(), locals(), "profile.out")
-        pstats.Stats("profile.out").sort_stats("cumulative").print_stats(20)
-    else:
-        _main(options)
+class DumbViewApp(PBToolRunner):
+
+    def __init__(self):
+        desc = "Command-line PacBio genome browser"
+        super(DumbViewApp, self).__init__(desc)
+        parser = self.parser
+
+        parser.add_argument("inputFilenames", nargs="+", type=str, help=".cmp.h5 or .gff filename, or both")
+        parser.add_argument("--referenceWindow", "-w", type=windowFromGffString, default=None)
+        parser.add_argument("--referenceFilename", "-r", default=None)
+        parser.add_argument("--depth", "-X", type=int, default=20)
+        parser.add_argument("--minMapQV", "-m", type=int, default=10)
+        parser.add_argument("--rowNumbers", type=int, nargs="+", default=None)
+        parser.add_argument("--columns", type=str, nargs="+", default=None)
+        parser.add_argument("--unaligned", "-u", dest="aligned", action="store_false")
+        parser.add_argument("--aligned",   "-a", dest="aligned", action="store_true", default=True)
+        parser.add_argument("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
+
+        class ColorAction(argparse.Action):
+            def __call__(self, parser, namespace, values, option_string=None):
+                if (values == None) or (values == "on"):
+                    color = True
+                elif (values == "off"):
+                    color = False
+                else:
+                    assert values == "auto"
+                    color = os.isatty(1)
+                setattr(namespace, self.dest, color)
+
+        parser.add_argument("--color", "-c", nargs="?", choices=["on", "off", "auto"],
+                            action=ColorAction, default=os.isatty(1))
+
+
+    def validateArgs(self):
+        self.args.inputGff  = None
+        self.args.inputCmpH5 = None
+        for fname in self.args.inputFilenames:
+            if fname.endswith(".gff") or fname.endswith(".gff.gz"):
+                self.args.inputGff = fname
+            elif fname.endswith(".cmp.h5"):
+                self.args.inputCmpH5 = fname
+            else:
+                die("Invalid input file")
+
+
+    def getVersion(self):
+        return "0.2"
+
+    def run(self):
+        _main(self.args)
+        return 0
