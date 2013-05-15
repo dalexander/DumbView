@@ -1,7 +1,7 @@
 import GenomicConsensus.quiver as q
 from GenomicConsensus.consensus import *
 import ConsensusCore as cc
-from .Window import *
+from .Window import Window, subWindow
 from .utils import readsInWindow
 
 K = 3
@@ -19,7 +19,6 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
     refName = cmpH5.referenceInfo(refWindow.refId).FullName
     refLength = referenceTable.length(refName)
     eWindow = enlargedReferenceWindow(refWindow, refLength, overlap)
-    refSeqInWindow = referenceTable.sequence(refName, refWindow.start, refWindow.end)
     refSeqInEnlargedWindow = referenceTable.sequence(refName, eWindow.start, eWindow.end)
 
     # find 3-spanned intervals in the enlarged interval
@@ -43,12 +42,12 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
                                  minMapQV=quiverConfig.minMapQV,
                                  strategy="longest")
             clippedAlns = [ aln.clippedTo(*interval) for aln in cmpH5[rows]]
-            goodAlns = q.utils.filterAlnsForQuiver(subWin, clippedAlns, quiverConfig)
+            goodAlns = q.utils.filterAlns(subWin, clippedAlns, quiverConfig)
             if len(goodAlns) >= K:
-                css_ = q.utils.quiverConsensusForAlignments(subWin,
-                                                            intRefSeq,
-                                                            goodAlns,
-                                                            quiverConfig)
+                css_ = q.utils.consensusForAlignments(subWin,
+                                                      intRefSeq,
+                                                      goodAlns,
+                                                      quiverConfig)
 
         subConsensi.append(css_)
 

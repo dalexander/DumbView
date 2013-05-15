@@ -3,17 +3,16 @@
 # Will be migrated to pbh5tools when possible.
 #
 
-import argparse, cProfile, numpy as np, os, shlex, pstats, sys
-from pbcore.io import CmpH5Reader, FastaReader, GffReader
+import argparse, os, shlex, sys
+from pbcore.io import CmpH5Reader, GffReader
 from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
-from DumbView.utils import *
 from DumbView.Window import *
 from DumbView.FastaTable import *
+from GenomicConsensus.utils import readsInWindow
 
 def loadReferences(fastaFilename, cmpH5):
     return FastaTable(fastaFilename)
-
 
 def extractCmpH5AndReferenceFromGff(gffReader):
     # This code is a horrible hack and an affront to good taste and I
@@ -56,7 +55,8 @@ def mainGff(options):
         variantSeq   = gffRecord.get("variantSeq", "-")
         variantConfidence = gffRecord.confidence
         variantSummary = "(%s > %s)" % (referenceSeq, variantSeq)
-        print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, variantSummary, variantConfidence
+        print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, \
+            variantSummary, variantConfidence
         refId = cmpH5.referenceInfo(gffRecord.seqid).ID
         refWindow = Window(refId,
                            gffRecord.start - 10,
@@ -98,18 +98,18 @@ class DumbViewApp(PBToolRunner):
     def __init__(self):
         desc = "Command-line PacBio genome browser"
         super(DumbViewApp, self).__init__(desc)
-        parser = self.parser
 
-        parser.add_argument("inputFilenames", nargs="+", type=str, help=".cmp.h5 or .gff filename, or both")
-        parser.add_argument("--referenceWindow", "-w", type=windowFromGffString, default=None)
-        parser.add_argument("--referenceFilename", "-r", default=None)
-        parser.add_argument("--depth", "-X", type=int, default=20)
-        parser.add_argument("--minMapQV", "-m", type=int, default=10)
-        parser.add_argument("--rowNumbers", type=int, nargs="+", default=None)
-        parser.add_argument("--columns", type=str, nargs="+", default=None)
-        parser.add_argument("--unaligned", "-u", dest="aligned", action="store_false")
-        parser.add_argument("--aligned",   "-a", dest="aligned", action="store_true", default=True)
-        parser.add_argument("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
+        arg = self.parser.add_argument
+        arg("inputFilenames", nargs="+", type=str, help=".cmp.h5 or .gff filename, or both")
+        arg("--referenceWindow", "-w", type=windowFromGffString, default=None)
+        arg("--referenceFilename", "-r", default=None)
+        arg("--depth", "-X", type=int, default=20)
+        arg("--minMapQV", "-m", type=int, default=10)
+        arg("--rowNumbers", type=int, nargs="+", default=None)
+        arg("--columns", type=str, nargs="+", default=None)
+        arg("--unaligned", "-u", dest="aligned", action="store_false")
+        arg("--aligned",   "-a", dest="aligned", action="store_true", default=True)
+        arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
 
         class ColorAction(argparse.Action):
             def __call__(self, parser, namespace, values, option_string=None):
@@ -122,8 +122,8 @@ class DumbViewApp(PBToolRunner):
                     color = os.isatty(1)
                 setattr(namespace, self.dest, color)
 
-        parser.add_argument("--color", "-c", nargs="?", choices=["on", "off", "auto"],
-                            action=ColorAction, default=os.isatty(1))
+        arg("--color", "-c", nargs="?", choices=["on", "off", "auto"],
+            action=ColorAction, default=os.isatty(1))
 
 
     def validateArgs(self):
@@ -135,7 +135,8 @@ class DumbViewApp(PBToolRunner):
             elif fname.endswith(".cmp.h5"):
                 self.args.inputCmpH5 = fname
             else:
-                die("Invalid input file")
+                print "Invalid input file"
+                sys.exit(-1)
 
 
     def getVersion(self):
