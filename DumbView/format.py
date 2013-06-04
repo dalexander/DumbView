@@ -5,15 +5,19 @@ SPARKS = u' ▁▂▃▄▅▆▇'
 import numpy as np
 from .consensus import consensus, align
 
-ANSI_RED   = "\x1b[31m"
-ANSI_GREEN = "\x1b[32m"
-ANSI_RESET = "\x1b[39m"
+ANSI_RED     = "\x1b[31m"
+ANSI_GREEN   = "\x1b[32m"
+ANSI_REVERSE = "\x1b[7m"
+ANSI_RESET   = "\x1b[0m"
 
 def red(txt):
     return ANSI_RED + txt + ANSI_RESET
 
 def green(txt):
     return ANSI_GREEN + txt + ANSI_RESET
+
+def reverseRed(txt):
+    return ANSI_RED + ANSI_REVERSE + txt + ANSI_RESET
 
 def formatReferenceCoordinates(refWindow):
     canvas = np.zeros(refWindow.end - refWindow.start, dtype="S1")
@@ -50,6 +54,23 @@ def formatAlignedRead(cmpH5, refWindow, rowNumber):
         noInsertionsRead
     return canvas.tostring()
 
+
+def formatAlignedRead2(cmpH5, refWindow, rowNumber):
+    clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+    read = clippedRead.read(orientation="genomic")
+    transcript = clippedRead.transcript(orientation="genomic")
+    rendered = ""
+    for x, r in zip(transcript, read):
+        if x == "R":
+            rendered += reverseRed(r)
+        elif x == "D":
+            rendered += "-"
+        elif x == "M":
+            rendered += r
+    startGap = clippedRead.tStart - refWindow.start
+    return " "*startGap + rendered
+
+
 def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
     # FIXME!  This code is incorrect for reads that start partway through the window!
     # Ex, reads 14 and 1784 from ref000001:1-100 of job 038537
@@ -63,7 +84,7 @@ def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
     return output
 
 def formatAlignedReads(cmpH5, refWindow, rowNumbers):
-    return [ formatAlignedRead(cmpH5, refWindow, rowNumber)
+    return [ formatAlignedRead2(cmpH5, refWindow, rowNumber)
              for rowNumber in rowNumbers ]
 
 def formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
