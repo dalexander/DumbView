@@ -12,8 +12,8 @@ def windowFromString(windowString):
         key, rest = splitOnColon
     if "-" not in rest:
         refPos = int(rest)
-        start = refPos - 20
-        end   = refPos + 20
+        start = refPos - 50
+        end   = refPos + 50
     else:
         start, end = map(int, rest.split("-"))
     assert end >= start
