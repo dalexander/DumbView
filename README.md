@@ -1,12 +1,12 @@
 ### *DumbView:* a PacBio genome browser for command-line nerds
 
-![Screenshot](!https://raw.github.com/dalexander/DumbView/master/screenshot.png)
+![Screenshot](https://raw.github.com/dalexander/DumbView/master/screenshot.png)
 
-Requirements: ``pbcore``, ``GenomicConsensus``
+**Requirements:** ``pbcore``, ``GenomicConsensus``
 
-Install: ``python setup.py install``
+**Install:** ``python setup.py install``
 
-Use:
+**Use:**
 
   - View alignments to a window of the reference:
     ``dumbview aligned_reads.cmp.h5 [-r reference.fasta] -w<contigName>:<start>-<end>``
@@ -14,7 +14,7 @@ Use:
     ``dumbview variants.gff``
   - To enable "unaligned" mode (useful for eyeballing insertion variants) use ``-u``
 
-Notes:
+**Notes:**
   - DumbView expects a FASTA index (.fai) file in the same directory
     as the reference FASTA.  Make it with
     ``samtools faidx reference.fasta``.
