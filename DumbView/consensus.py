@@ -5,7 +5,7 @@ from .Window import Window, subWindow
 from .utils import readsInWindow
 
 K = 3
-quiverConfig = q.model.QuiverConfig()
+quiverConfig = q.model.loadQuiverConfig("unknown.NoQVsModel")
 overlap = 5
 
 def enlargedReferenceWindow(refWin, contigLength, overlap):
