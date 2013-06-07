@@ -1,6 +1,6 @@
 ### *DumbView:* a PacBio genome browser for command-line nerds
 
-
+![Screenshot](!https://raw.github.com/dalexander/DumbView/master/screenshot.png)
 
 Requirements: ``pbcore``, ``GenomicConsensus``
 
