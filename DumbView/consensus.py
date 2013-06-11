@@ -1,8 +1,9 @@
 import GenomicConsensus.quiver as q
 from GenomicConsensus.consensus import *
+from GenomicConsensus.utils import readsInWindow
 import ConsensusCore as cc
 from .Window import Window, subWindow
-from .utils import readsInWindow
+
 
 K = 3
 quiverConfig = q.model.loadQuiverConfig("unknown.NoQVsModel")
