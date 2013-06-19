@@ -126,7 +126,7 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
         formatReferenceAndConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
 
 def spark(arr):
-    idx = (np.array(arr, dtype=np.uint)/8).clip(0, 8)
+    idx = (np.array(arr, dtype=np.uint)/8).clip(0, len(SPARKS)-1)
     #print idx
     return "".join(SPARKS[i] for i in idx)
 
