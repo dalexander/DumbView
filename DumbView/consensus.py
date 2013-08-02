@@ -71,7 +71,7 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
 
 
 def align(ref, query):
-    ga = cc.AlignWithAffineGapPenalty(ref, query)
+    ga = cc.AlignAffine(ref, query)
     return (ga.Target(),
             ga.Transcript(),
             ga.Query())
