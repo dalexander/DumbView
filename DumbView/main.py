@@ -64,7 +64,8 @@ def mainGff(options):
         rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
                                    minMapQV=options.minMapQV, strategy=options.sorting)
         formatWindow(cmpH5, refWindow, rowNumbers, referenceTable,
-                     aligned=(gffRecord.type != "insertion"))
+                     aligned=(gffRecord.type != "insertion"),
+                     consensus=options.consensus)
         print
 
 def mainCmpH5(options):
@@ -84,7 +85,9 @@ def mainCmpH5(options):
         referenceTable = None
 
     formatWindow(cmpH5, refWindow, rowNumbers,
-                 referenceTable, options.aligned, options.color)
+                 referenceTable, options.aligned, options.color,
+                 options.consensus)
+    print
 
 def _main(options):
     if any([fn.endswith(".gff") or fn.endswith(".gff.gz")
@@ -110,6 +113,10 @@ class DumbViewApp(PBToolRunner):
         arg("--unaligned", "-u", dest="aligned", action="store_false")
         arg("--aligned",   "-a", dest="aligned", action="store_true", default=True)
         arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
+
+        self.parser.set_defaults(consensus=True)
+        arg("--consensus",   "-C", action="store_true", dest="consensus")
+        arg("--noConsensus", "-N", action="store_false", dest="consensus")
 
         class ColorAction(argparse.Action):
             def __call__(self, parser, namespace, values, option_string=None):

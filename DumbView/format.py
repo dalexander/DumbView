@@ -97,7 +97,7 @@ def formatConsensus(cmpH5, refWindow, rowNumbers, refTable):
     print " " * 10 + spark(cssObj.confidence)
 
 def formatWindow(cmpH5, refWindow, rowNumbers,
-                 referenceTable=None, aligned=True, useColor=True):
+                 referenceTable=None, aligned=True, useColor=True, consensus=True):
     if referenceTable:
         refName = cmpH5.referenceInfo(refWindow.refId).FullName
         referenceInWindow = referenceTable.sequence(refName, refWindow.start, refWindow.end)
@@ -118,11 +118,10 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
     for rn, ar in zip(rowNumbers, formattedReads):
         print ("%8d  " % rn)  + ar
 
-    if referenceTable:
+    if referenceTable and consensus:
         print
         print preMargin + formatReferenceCoordinates(refWindow)
         print preMargin + formatSeparatorLine(refWindow)
-        #formatConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
         formatReferenceAndConsensus(cmpH5, refWindow, referenceTable, rowNumbers)
 
 def spark(arr):
