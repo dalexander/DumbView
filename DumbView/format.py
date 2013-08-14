@@ -100,7 +100,7 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable=None, aligned=True, useColor=True, consensus=True):
     if referenceTable:
         refName = cmpH5.referenceInfo(refWindow.refId).FullName
-        referenceInWindow = referenceTable.sequence(refName, refWindow.start, refWindow.end)
+        referenceInWindow = referenceTable[refName].sequence[refWindow.start:refWindow.end]
     else:
         referenceInWindow = None
 
@@ -132,7 +132,7 @@ def spark(arr):
 def formatReferenceAndConsensus(cmpH5, refWindow, refTable, rowNumbers):
     refName = cmpH5.referenceInfo(refWindow.refId).FullName
     cssObj = consensus(cmpH5, refWindow, refTable, rowNumbers)
-    refInWindow = refTable.sequence(refName, refWindow.start, refWindow.end)
+    refInWindow = refTable[refName].sequence[refWindow.start:refWindow.end]
     alnRef, transcript, alnQuery = align(refInWindow, cssObj.sequence)
 
     refChars = []

@@ -18,9 +18,9 @@ def enlargedReferenceWindow(refWin, contigLength, overlap):
 def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
     # identify the enlarged interval [-5, +5]
     refName = cmpH5.referenceInfo(refWindow.refId).FullName
-    refLength = referenceTable.length(refName)
+    refLength = len(referenceTable[refName].sequence)
     eWindow = enlargedReferenceWindow(refWindow, refLength, overlap)
-    refSeqInEnlargedWindow = referenceTable.sequence(refName, eWindow.start, eWindow.end)
+    refSeqInEnlargedWindow = referenceTable[refName].sequence[eWindow.start:eWindow.end]
 
     # find 3-spanned intervals in the enlarged interval
     # call css for each interval
