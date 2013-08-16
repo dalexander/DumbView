@@ -15,6 +15,22 @@ def loadReferences(fastaFilename, cmpH5):
     return FastaTable(fastaFilename)
 
 def extractCmpH5AndReferenceFromGff(gffReader):
+    #
+    # New way
+    #
+    cmpH5 = None
+    reference = None
+    for h in gffReader.headers:
+        if h.startswith("##source-alignment-file"):
+            cmpH5 = h.split()[1]
+        elif h.startswith("##source-reference-file"):
+            reference = h.split()[1]
+        if cmpH5 and reference:
+            return cmpH5, reference
+
+    #
+    # Old way
+    #
     # This code is a horrible hack and an affront to good taste and I
     # blame Python's stdlib for making this the way I had to do it.
     cmpH5 = None
