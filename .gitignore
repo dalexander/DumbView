@@ -1,2 +1,5 @@
 *.pyc
 *~
+build/
+DumbView.egg-info/
+dist/
