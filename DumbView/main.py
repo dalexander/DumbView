@@ -4,11 +4,10 @@
 #
 
 import argparse, os, shlex, sys
-from pbcore.io import CmpH5Reader, GffReader
+from pbcore.io import CmpH5Reader, GffReader, FastaTable
 from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
 from DumbView.Window import *
-from DumbView.FastaTable import *
 from GenomicConsensus.utils import readsInWindow
 
 def loadReferences(fastaFilename, cmpH5):
