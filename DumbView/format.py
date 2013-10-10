@@ -153,3 +153,10 @@ def formatReferenceAndConsensus(cmpH5, refWindow, refTable, rowNumbers):
     print "     ref  " + "".join(refChars)
     print "     css  " + "".join(cssChars)
     print " " * 10 + spark(cssObj.confidence)
+
+
+def formatIndividualAlignments(cmpH5, refWindow, rowNumbers):
+    for row in rowNumbers:
+        print "--"
+        print "Row number %d" % row
+        print cmpH5[row].clippedTo(refWindow.start, refWindow.end)

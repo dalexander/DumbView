@@ -99,9 +99,12 @@ def mainCmpH5(options):
     else:
         referenceTable = None
 
-    formatWindow(cmpH5, refWindow, rowNumbers,
-                 referenceTable, options.aligned, options.color,
-                 options.consensus)
+    if options.oneAtATime:
+        formatIndividualAlignments(cmpH5, refWindow, rowNumbers)
+    else:
+        formatWindow(cmpH5, refWindow, rowNumbers,
+                     referenceTable, options.aligned, options.color,
+                     options.consensus)
     print
 
 def _main(options):
@@ -123,10 +126,11 @@ class DumbViewApp(PBToolRunner):
         arg("--referenceFilename", "-r", default=None)
         arg("--depth", "-X", type=int, default=20)
         arg("--minMapQV", "-m", type=int, default=10)
-        arg("--rowNumbers", type=int, nargs="+", default=None)
+        arg("--rowNumbers", "-n", type=int, nargs="+", default=None)
         arg("--columns", type=str, nargs="+", default=None)
         arg("--unaligned", "-u", dest="aligned", action="store_false")
         arg("--aligned",   "-a", dest="aligned", action="store_true", default=True)
+        arg("--oneAtATime", "-1", action="store_true", default=False)
         arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
 
         self.parser.set_defaults(consensus=True)
