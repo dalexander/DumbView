@@ -76,8 +76,11 @@ def mainGff(options):
         refWindow = Window(refId,
                            gffRecord.start - 10,
                            gffRecord.end   + 10)
-        rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
-                                   minMapQV=options.minMapQV, strategy=options.sorting)
+        if "rows" in gffRecord.attributes:
+            rowNumbers = map(int, gffRecord.rows.split(","))
+        else:
+            rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
+                                       minMapQV=options.minMapQV, strategy=options.sorting)
         formatWindow(cmpH5, refWindow, rowNumbers, referenceTable,
                      aligned=(gffRecord.type != "insertion"),
                      consensus=options.consensus)
