@@ -36,7 +36,7 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
         intStart, intEnd = interval
         intRefSeq = refSeqInEnlargedWindow[intStart-eWindow.start:
                                            intEnd-eWindow.start]
-        css_ = noCallAsConsensus(subWin, intRefSeq)
+        css_ = Consensus.nAsConsensus(subWin, intRefSeq)
         if interval in coveredIntervals:
             rows = readsInWindow(cmpH5, subWin,
                                  depthLimit=100,
