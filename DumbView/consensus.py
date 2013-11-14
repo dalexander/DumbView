@@ -1,7 +1,10 @@
 import GenomicConsensus.quiver as q
+import ConsensusCore as cc
+import GenomicConsensus.windows as w
+
 from GenomicConsensus.consensus import *
 from GenomicConsensus.utils import readsInWindow
-import ConsensusCore as cc
+
 from .Window import Window, subWindow
 
 
@@ -27,8 +30,8 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
     subConsensi = []
     tStart = cmpH5.tStart[rowNumbers]
     tEnd   = cmpH5.tEnd[rowNumbers]
-    coveredIntervals = q.utils.kSpannedIntervals(eWindow, K, tStart, tEnd)
-    holes = q.utils.holes(eWindow, coveredIntervals)
+    coveredIntervals = w.kSpannedIntervals(eWindow, K, tStart, tEnd)
+    holes = w.holes(eWindow, coveredIntervals)
 
     for interval in sorted(coveredIntervals + holes):
         subWin = subWindow(eWindow, interval)
