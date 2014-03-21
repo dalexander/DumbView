@@ -30,6 +30,11 @@ def subWindow(refWindow, subinterval):
     assert intE <= winEnd
     return refWindow._replace(start=intS, end=intE)
 
+def clipToContigBounds(contigLen, refWindow):
+    refId, refStart, refEnd = refWindow
+    refStart = max(0, refStart)
+    refEnd   = min(contigLen, refEnd)
+    return Window(refId, refStart, refEnd)
 
 # -------- Utility functions ---------
 

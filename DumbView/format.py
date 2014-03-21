@@ -4,6 +4,7 @@ SPARKS = u' ▁▂▃▄▅▆▇'
 
 import numpy as np
 from .consensus import consensus, align
+from .Window import clipToContigBounds
 
 ANSI_RED     = "\x1b[31m"
 ANSI_GREEN   = "\x1b[32m"
@@ -56,7 +57,11 @@ def formatAlignedRead(cmpH5, refWindow, rowNumber):
 
 
 def formatAlignedRead2(cmpH5, refWindow, rowNumber):
-    clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+    try:
+        clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+    except:
+        return ""
+
     read = clippedRead.read(orientation="genomic")
     transcript = clippedRead.transcript(orientation="genomic")
     rendered = ""
@@ -98,6 +103,9 @@ def formatConsensus(cmpH5, refWindow, rowNumbers, refTable):
 
 def formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable=None, aligned=True, useColor=True, consensus=True):
+
+    refWindow = clipToContigBounds(cmpH5.referenceInfo(refWindow.refId).Length, refWindow)
+
     if referenceTable:
         refName = cmpH5.referenceInfo(refWindow.refId).FullName
         referenceInWindow = referenceTable[refName].sequence[refWindow.start:refWindow.end]
