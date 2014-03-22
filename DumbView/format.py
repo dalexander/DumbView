@@ -4,7 +4,6 @@ SPARKS = u' ▁▂▃▄▅▆▇'
 
 import numpy as np
 from .consensus import consensus, align
-from .Window import clipToContigBounds
 
 ANSI_RED     = "\x1b[31m"
 ANSI_GREEN   = "\x1b[32m"
@@ -56,7 +55,7 @@ def formatAlignedRead(cmpH5, refWindow, rowNumber):
     return canvas.tostring()
 
 
-def formatAlignedRead2(cmpH5, refWindow, rowNumber):
+def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
     try:
         clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
     except:
@@ -67,7 +66,7 @@ def formatAlignedRead2(cmpH5, refWindow, rowNumber):
     rendered = ""
     for x, r in zip(transcript, read):
         if x == "R":
-            rendered += reverseRed(r)
+            rendered += reverseRed(r) if useColor else r
         elif x == "D":
             rendered += "-"
         elif x == "M":
@@ -85,11 +84,13 @@ def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
     output = ""
     for (readChar, transcriptChar) in zip(alnRead, transcript):
         if transcriptChar in "MR":  output += readChar
-        elif transcriptChar in "I": output += red(readChar.lower())
+        elif transcriptChar in "I":
+            if useColor: output += red(readChar.lower())
+            else:        output += readChar.lower()
     return output
 
-def formatAlignedReads(cmpH5, refWindow, rowNumbers):
-    return [ formatAlignedRead2(cmpH5, refWindow, rowNumber)
+def formatAlignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
+    return [ formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor)
              for rowNumber in rowNumbers ]
 
 def formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
@@ -117,7 +118,7 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
     print preMargin + formatSeparatorLine(refWindow)
 
     if aligned:
-        formattedReads = formatAlignedReads(cmpH5, refWindow, rowNumbers)
+        formattedReads = formatAlignedReads(cmpH5, refWindow, rowNumbers, useColor)
     else:
         formattedReads = formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor)
 

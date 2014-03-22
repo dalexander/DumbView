@@ -74,11 +74,10 @@ def mainGff(options):
             variantSummary, variantConfidence
         refId = cmpH5.referenceInfo(gffRecord.seqid).ID
         refLength = cmpH5.referenceInfo(gffRecord.seqid).Length
-        refWindow = clipToContigBounds(refLength,
+        refWindow = makeDisplayWindow(refLength, options.width,
                                        Window(refId,
-                                              gffRecord.start - 10,
-                                              gffRecord.end   + 10))
-
+                                              gffRecord.start-10,
+                                              gffRecord.end+10))
         if "rows" in gffRecord.attributes:
             rowNumbers = map(int, gffRecord.rows.split(","))
         else:
@@ -86,7 +85,7 @@ def mainGff(options):
                                        minMapQV=options.minMapQV, strategy=options.sorting)
         formatWindow(cmpH5, refWindow, rowNumbers, referenceTable,
                      aligned=(gffRecord.type != "insertion"),
-                     consensus=options.consensus)
+                     consensus=options.consensus, useColor=options.color)
         print
 
 def mainCmpH5(options):
@@ -101,7 +100,7 @@ def mainCmpH5(options):
         refName = cmpH5.referenceInfo(refWindow.refId).FullName
         refLength = cmpH5.referenceInfo(refWindow.refId).Length
         refWindow = refWindow._replace(refId=refId)
-        refWindow = clipToContigBounds(refLength, refWindow)
+        refWindow = makeDisplayWindow(refLength, options.width, refWindow)
 
         if options.rowNumbers != None:
             rowNumbers = options.rowNumbers
@@ -109,7 +108,7 @@ def mainCmpH5(options):
             rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
                                        minMapQV=options.minMapQV, strategy=options.sorting)
 
-        print "%s:%d-%d" % (refName, refWindow.start, refWindow.end)
+        print windowToGffString(Window(refName, refWindow.start, refWindow.end))
 
         if options.oneAtATime:
             formatIndividualAlignments(cmpH5, refWindow, rowNumbers)
@@ -137,6 +136,7 @@ class DumbViewApp(PBToolRunner):
         arg("--referenceWindows", "-w", type=windowsFromGffStrings, default=[])
         arg("--referenceFilename", "-r", default=None)
         arg("--depth", "-D", "-X", type=int, default=20)
+        arg("--width", "-W", type=int, default=40)
         arg("--minMapQV", "-m", type=int, default=10)
         arg("--rowNumbers", "-n", type=int, nargs="+", default=None)
         arg("--columns", type=str, nargs="+", default=None)

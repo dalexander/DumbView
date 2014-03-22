@@ -12,11 +12,11 @@ def windowFromString(windowString):
         key, rest = splitOnColon
     if "-" not in rest:
         refPos = int(rest)
-        start = refPos - 50
-        end   = refPos + 50
+        start = refPos
+        end   = None
     else:
         start, end = map(int, rest.split("-"))
-    assert end >= start
+    assert end is None or end >= start
     return Window(grok(key), start, end)
 
 def windowFromGffString(windowString):
@@ -26,6 +26,9 @@ def windowFromGffString(windowString):
 def windowsFromGffStrings(gffStrings):
     return map(windowFromGffString, gffStrings.split(","))
 
+def windowToGffString(window):
+    return "%s:%d-%d" % (window.refId, window.start+1, window.end)
+
 def subWindow(refWindow, subinterval):
     winId, winStart, winEnd = refWindow
     intS, intE = subinterval
@@ -33,11 +36,14 @@ def subWindow(refWindow, subinterval):
     assert intE <= winEnd
     return refWindow._replace(start=intS, end=intE)
 
-def clipToContigBounds(contigLen, refWindow):
+def makeDisplayWindow(contigLen, width, refWindow):
     refId, refStart, refEnd = refWindow
-    refStart = max(0, refStart)
+    if refEnd == None:
+        refEnd = refStart + width//2
+        refStart = refStart - width//2
     refEnd   = min(contigLen, refEnd)
     return Window(refId, refStart, refEnd)
+
 
 # -------- Utility functions ---------
 
