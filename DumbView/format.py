@@ -104,8 +104,6 @@ def formatConsensus(cmpH5, refWindow, rowNumbers, refTable):
 def formatWindow(cmpH5, refWindow, rowNumbers,
                  referenceTable=None, aligned=True, useColor=True, consensus=True):
 
-    refWindow = clipToContigBounds(cmpH5.referenceInfo(refWindow.refId).Length, refWindow)
-
     if referenceTable:
         refName = cmpH5.referenceInfo(refWindow.refId).FullName
         referenceInWindow = referenceTable[refName].sequence[refWindow.start:refWindow.end]

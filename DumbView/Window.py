@@ -23,6 +23,9 @@ def windowFromGffString(windowString):
     w = windowFromString(windowString)
     return w._replace(start=w.start-1)
 
+def windowsFromGffStrings(gffStrings):
+    return map(windowFromGffString, gffStrings.split(","))
+
 def subWindow(refWindow, subinterval):
     winId, winStart, winEnd = refWindow
     intS, intE = subinterval

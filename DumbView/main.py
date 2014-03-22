@@ -73,9 +73,12 @@ def mainGff(options):
         print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, \
             variantSummary, variantConfidence
         refId = cmpH5.referenceInfo(gffRecord.seqid).ID
-        refWindow = Window(refId,
-                           gffRecord.start - 10,
-                           gffRecord.end   + 10)
+        refLength = cmpH5.referenceInfo(gffRecord.seqid).Length
+        refWindow = clipToContigBounds(refLength,
+                                       Window(refId,
+                                              gffRecord.start - 10,
+                                              gffRecord.end   + 10))
+
         if "rows" in gffRecord.attributes:
             rowNumbers = map(int, gffRecord.rows.split(","))
         else:
@@ -88,27 +91,33 @@ def mainGff(options):
 
 def mainCmpH5(options):
     cmpH5 = CmpH5Reader(options.inputCmpH5)
-    refId = cmpH5.referenceInfo(options.referenceWindow.refId).ID
-    refWindow = options.referenceWindow._replace(refId=refId)
-
-    if options.rowNumbers != None:
-        rowNumbers = options.rowNumbers
-    else:
-        rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
-                                   minMapQV=options.minMapQV, strategy=options.sorting)
-
     if options.referenceFilename:
         referenceTable = loadReferences(options.referenceFilename, cmpH5)
     else:
         referenceTable = None
 
-    if options.oneAtATime:
-        formatIndividualAlignments(cmpH5, refWindow, rowNumbers)
-    else:
-        formatWindow(cmpH5, refWindow, rowNumbers,
-                     referenceTable, options.aligned, options.color,
-                     options.consensus)
-    print
+    for refWindow in options.referenceWindows:
+        refId = cmpH5.referenceInfo(refWindow.refId).ID
+        refName = cmpH5.referenceInfo(refWindow.refId).FullName
+        refLength = cmpH5.referenceInfo(refWindow.refId).Length
+        refWindow = refWindow._replace(refId=refId)
+        refWindow = clipToContigBounds(refLength, refWindow)
+
+        if options.rowNumbers != None:
+            rowNumbers = options.rowNumbers
+        else:
+            rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
+                                       minMapQV=options.minMapQV, strategy=options.sorting)
+
+        print "%s:%d-%d" % (refName, refWindow.start, refWindow.end)
+
+        if options.oneAtATime:
+            formatIndividualAlignments(cmpH5, refWindow, rowNumbers)
+        else:
+            formatWindow(cmpH5, refWindow, rowNumbers,
+                         referenceTable, options.aligned, options.color,
+                         options.consensus)
+        print
 
 def _main(options):
     if any([fn.endswith(".gff") or fn.endswith(".gff.gz")
@@ -125,9 +134,9 @@ class DumbViewApp(PBToolRunner):
 
         arg = self.parser.add_argument
         arg("inputFilenames", nargs="+", type=str, help=".cmp.h5 or .gff filename, or both")
-        arg("--referenceWindow", "-w", type=windowFromGffString, default=None)
+        arg("--referenceWindows", "-w", type=windowsFromGffStrings, default=[])
         arg("--referenceFilename", "-r", default=None)
-        arg("--depth", "-X", type=int, default=20)
+        arg("--depth", "-D", "-X", type=int, default=20)
         arg("--minMapQV", "-m", type=int, default=10)
         arg("--rowNumbers", "-n", type=int, nargs="+", default=None)
         arg("--columns", type=str, nargs="+", default=None)
