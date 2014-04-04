@@ -58,7 +58,7 @@ def formatAlignedRead(cmpH5, refWindow, rowNumber):
         noInsertionsRead
     return canvas.tostring()
 
-def formatAlignedRead3(cmpH5, refWindow, referenceInWindow, rowNumber, useColor=False):
+def formatAlignedRead3(cmpH5, refWindow, reference, rowNumber, useColor=False):
     try:
         clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
     except:
@@ -74,45 +74,38 @@ def formatAlignedRead3(cmpH5, refWindow, referenceInWindow, rowNumber, useColor=
             (r, x) for r, x in zip(read, transcript)
             if x in validMoves])]
 
-    assert len(read) == len(referenceInWindow)
+    assert len(read) == len(reference)
+
+    def formatState(s, t):
+        if s == "R":   return reverseRed(t) if useColor else t
+        elif s == "D": return "-"
+        elif s == "M": return t
+        return ""
 
     # if you have a sequence of Ds and Ms, move Ds up
-    def bubbleUpGaps(transcript):
+    def bubbleUpGaps(alignment):
         validMoves = set(["D", "M"])
         state = []
-        for x in transcript:
+        for x, q in alignment:
             if x in validMoves:
-                state.append(x)
+                state.append((x, q))
             else:
-                state.sort()
-                for s in state:
-                    yield s
+                state.sort(key=itemgetter(0))
+                for s, t in state:
+                    yield formatState(s, t)
                 state = []
-                yield x
-        state.sort()
-        for s in state:
-            yield s
-
-    # group by homopolymer in the reference, bubble up gaps to head of the HP
-    transcript = "".join(
-        "".join(bubbleUpGaps(x for _, x in rx))
-        for _, rx in groupby(zip(referenceInWindow, transcript), itemgetter(0)))
+                yield formatState(x, q)
+        state.sort(key=itemgetter(0))
+        for s, t in state:
+            yield formatState(s, t)
 
     startGap = clippedRead.tStart - refWindow.start
+    # group by homopolymer in the reference, bubble up gaps to head of the HP
+    rendered = " " * startGap + "".join(
+        "".join(bubbleUpGaps(a for _, a  in ra))
+        for _, ra in groupby(zip(reference, zip(transcript, read)), itemgetter(0)))
 
-    def renderRead():
-        for _ in xrange(startGap):
-            yield " "
-
-        for x, r in zip(transcript, read):
-            if x == "R":
-                yield reverseRed(r) if useColor else r
-            elif x == "D":
-                yield "-"
-            elif x == "M":
-                yield r
-
-    return "".join(renderRead())
+    return rendered
 
 def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
     try:
