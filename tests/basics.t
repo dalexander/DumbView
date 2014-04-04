@@ -11,10 +11,10 @@
        Ref  AGCCTGACGGGCAATGCTGC
             ====+====|====+====|
         63  -GCCTGACGGG---TGCTGC
-        64  -GCCTGACG-GCA-T-CTG-
+        64  -GCCTGAC-GGC-AT-CTG-
         65  AGCCTGACGGG--A-GCTGC
-        66  AGCCTGACG--CAATGCTGC
-        67  AGCCTGACG-GCAATGCTGC
+        66  AGCCTGAC--GCAATGCTGC
+        67  AGCCTGAC-GGCAATGCTGC
   
   insertion lambda_NEB3011 30924 30924 (. > G) 25
              30920              
