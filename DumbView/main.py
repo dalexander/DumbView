@@ -3,11 +3,11 @@
 # Will be migrated to pbh5tools when possible.
 #
 
-import argparse, os, shlex, sys
+import argparse, os, os.path, shlex, sys
 from pbcore.io import CmpH5Reader, GffReader, FastaTable
 from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
-from DumbView.Window import *
+from DumbView.window import *
 from GenomicConsensus.utils import readsInWindow
 
 def loadReferences(fastaFilename, cmpH5):
@@ -59,8 +59,8 @@ def mainGff(options):
     cmpH5Fname = options.inputCmpH5 or cmpH5Fname
     referenceFname = options.referenceFilename or referenceFname
 
-    assert cmpH5Fname
-    assert referenceFname
+    assert os.path.isfile(cmpH5Fname)
+    assert os.path.isfile(referenceFname)
 
     cmpH5 = CmpH5Reader(cmpH5Fname)
     referenceTable = loadReferences(referenceFname, cmpH5)

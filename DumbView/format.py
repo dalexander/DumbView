@@ -3,6 +3,10 @@
 SPARKS = u' ▁▂▃▄▅▆▇'
 
 import numpy as np
+
+from itertools import groupby
+from operator import itemgetter
+
 from .consensus import consensus, align
 
 ANSI_RED     = "\x1b[31m"
@@ -54,6 +58,54 @@ def formatAlignedRead(cmpH5, refWindow, rowNumber):
         noInsertionsRead
     return canvas.tostring()
 
+def formatAlignedRead3(cmpH5, refWindow, reference, rowNumber, useColor=False):
+    try:
+        clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+    except:
+        return ""
+
+    read = clippedRead.read(orientation="genomic")
+    transcript = clippedRead.transcript(orientation="genomic")
+    validMoves = set(["R", "D", "M"])
+
+    # get read absent any insertions (should be of refWindow length)
+    read, transcript = [
+        "".join(itr) for itr in zip(*[
+            (r, x) for r, x in zip(read, transcript)
+            if x in validMoves])]
+
+    assert len(read) == len(reference)
+
+    def formatState(s, t):
+        if s == "R":   return reverseRed(t) if useColor else t
+        elif s == "D": return "-"
+        elif s == "M": return t
+        return ""
+
+    # if you have a sequence of Ds and Ms, move Ds up
+    def bubbleUpGaps(alignment):
+        validMoves = set(["D", "M"])
+        state = []
+        for x, q in alignment:
+            if x in validMoves:
+                state.append((x, q))
+            else:
+                state.sort(key=itemgetter(0))
+                for s, t in state:
+                    yield formatState(s, t)
+                state = []
+                yield formatState(x, q)
+        state.sort(key=itemgetter(0))
+        for s, t in state:
+            yield formatState(s, t)
+
+    startGap = clippedRead.tStart - refWindow.start
+    # group by homopolymer in the reference, bubble up gaps to head of the HP
+    rendered = " " * startGap + "".join(
+        "".join(bubbleUpGaps(a for _, a  in ra))
+        for _, ra in groupby(zip(reference, zip(transcript, read)), itemgetter(0)))
+
+    return rendered
 
 def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
     try:
@@ -89,6 +141,10 @@ def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
             else:        output += readChar.lower()
     return output
 
+def formatAlignedReads2(cmpH5, refWindow, referenceInWindow, rowNumbers, useColor=False):
+    return [ formatAlignedRead3(cmpH5, refWindow, referenceInWindow, rowNumber, useColor)
+             for rowNumber in rowNumbers ]
+
 def formatAlignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
     return [ formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor)
              for rowNumber in rowNumbers ]
@@ -117,7 +173,9 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
         print "     Ref  " + referenceInWindow
     print preMargin + formatSeparatorLine(refWindow)
 
-    if aligned:
+    if aligned and referenceTable:
+        formattedReads = formatAlignedReads2(cmpH5, refWindow, referenceInWindow, rowNumbers, useColor)
+    elif aligned:
         formattedReads = formatAlignedReads(cmpH5, refWindow, rowNumbers, useColor)
     else:
         formattedReads = formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor)

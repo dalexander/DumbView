@@ -5,7 +5,7 @@ import GenomicConsensus.windows as w
 from GenomicConsensus.consensus import *
 from GenomicConsensus.utils import readsInWindow
 
-from .Window import Window, subWindow
+from .window import Window, subWindow
 
 
 K = 3
