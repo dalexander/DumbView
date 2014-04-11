@@ -41,6 +41,7 @@ def makeDisplayWindow(contigLen, width, refWindow):
     if refEnd == None:
         refEnd = refStart + width//2
         refStart = refStart - width//2
+    refStart = max(0, refStart)
     refEnd   = min(contigLen, refEnd)
     return Window(refId, refStart, refEnd)
 

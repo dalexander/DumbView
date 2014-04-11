@@ -1,11 +1,17 @@
 
   $ CMPH5=`python -c 'import pbcore.data as D; print D.getCmpH5()'`
   $ VARIANTS_GFF=`python -c 'import pbcore.data as D; print D.getGff3()'`
+  $ LAMBDA_REF=`python -c 'import pbcore.data as D; print D.getLambdaFasta()'`
   $ DV="dumbview -N --color=off"
 
   $ export TERM=dumb
 
-  $ $DV $CMPH5 $VARIANTS_GFF
+  $ [ -f $LAMBDA_REF   ] || echo "MISSING FILE"
+  $ [ -f $VARIANTS_GFF ] || echo "MISSING FILE"
+  $ [ -f $CMPH5        ] || echo "MISSING FILE"
+
+
+  $ $DV -r $LAMBDA_REF $CMPH5 $VARIANTS_GFF
   deletion lambda_NEB3011 30890 30890 (G > .) 25
                            30900
        Ref  AGCCTGACGGGCAATGCTGC
@@ -29,14 +35,12 @@
 
 
 
-
-
   $ $DV $CMPH5 -w1:10 -W20
-  lambda_NEB3011:0-19
-                                
-            |====+====|====+====
-         0   GGGCG-CGACCTCGCGG-T
-         1   GGGCGGCGAC-TCGCGGGT
+  lambda_NEB3011:1-19
+                               
+            ====+====|====+====
+         0  GGGCG-CGACCTCGCGG-T
+         1  GGGCGGCGAC-TCGCGGGT
   
 
 
