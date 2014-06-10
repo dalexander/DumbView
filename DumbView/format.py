@@ -173,9 +173,7 @@ def formatWindow(cmpH5, refWindow, rowNumbers,
         print "     Ref  " + referenceInWindow
     print preMargin + formatSeparatorLine(refWindow)
 
-    if aligned and referenceTable:
-        formattedReads = formatAlignedReads2(cmpH5, refWindow, referenceInWindow, rowNumbers, useColor)
-    elif aligned:
+    if aligned:
         formattedReads = formatAlignedReads(cmpH5, refWindow, rowNumbers, useColor)
     else:
         formattedReads = formatUnalignedReads(cmpH5, refWindow, rowNumbers, useColor)
