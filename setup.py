@@ -5,7 +5,7 @@ setup(
     version="0.2.0",
     author="Pacific Biosciences",
     author_email="dalexander@pacificbiosciences.com",
-    scripts = ["bin/dumbview"],
+    scripts = ["bin/dumbview", "bin/dumbview-ccs"],
     packages = find_packages(),
     zip_safe = False,
     install_requires=[
