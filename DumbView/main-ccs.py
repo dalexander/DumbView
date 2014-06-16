@@ -2,6 +2,7 @@ from pbcore.io import CmpH5Reader, FastaTable
 from pbcore.util.ToolRunner import PBToolRunner
 import sys, argparse, os
 
+from DumbView.main import loadReferences
 from DumbView.window import Window
 from DumbView.format import *
 
@@ -12,12 +13,13 @@ def windowChunks(refWindow, WIDTH=60):
         yield Window(refId, s, e)
 
 def main(options):
-    if options.referenceFilename:
-        referenceTable = loadReferences(options.referenceFilename, cmpH5)
-    else:
-        referenceTable = None
     subreadCmp = CmpH5Reader(options.subreads)
     ccsCmp = CmpH5Reader(options.ccs)
+    if options.referenceFilename:
+        referenceTable = loadReferences(options.referenceFilename, subreadCmp)
+    else:
+        referenceTable = None
+
 
     subreads = subreadCmp.readsForZmw(options.zmw)
     ccsReads = ccsCmp.readsForZmw(options.zmw)
@@ -36,16 +38,16 @@ def main(options):
 
     refWindow = Window(refId, refStart, refEnd)
     rowNumbers = [a.rowNumber for a in subreads]
+    ccsRowNumber = ccsRead.rowNumber
 
-    for subWindow in windowChunks(refWindow):
-        if options.oneAtATime:
-            formatIndividualAlignments(subreadCmp, subWindow, rowNumbers)
-            print
-        else:
+    if options.oneAtATime:
+        formatIndividualAlignments(subreadCmp, refWindow, rowNumbers)
+
+    else:
+        for subWindow in windowChunks(refWindow):
             formatWindow(subreadCmp, subWindow, rowNumbers,
                          referenceTable, options.aligned, options.color)
             print
-
 
 
 class DumbViewCCSApp(PBToolRunner):
@@ -67,7 +69,7 @@ class DumbViewCCSApp(PBToolRunner):
         arg("--unaligned", "-u", dest="aligned", action="store_false")
         arg("--aligned",   "-a", dest="aligned", action="store_true", default=True)
         arg("--oneAtATime", "-1", action="store_true", default=False)
-        arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
+        arg("--sorting", "-s", choices=["readorder", "strand", "longest"], default="readorder")
 
         class ColorAction(argparse.Action):
             def __call__(self, parser, namespace, values, option_string=None):
@@ -87,7 +89,6 @@ class DumbViewCCSApp(PBToolRunner):
         return "0.2"
 
     def run(self):
-        print "EHWRE"
         try:
             import ipdb
             with ipdb.launch_ipdb_on_exception():
