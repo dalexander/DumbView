@@ -137,7 +137,10 @@ def formatAlignedRead3(cmpH5, refWindow, rowNumber, useColor=False):
 def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
     # FIXME!  This code is incorrect for reads that start partway through the window!
     # Ex, reads 14 and 1784 from ref000001:1-100 of job 038537
-    clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+    try:
+        clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+    except:
+        return ""
     alnRead = clippedRead.read(orientation="genomic")
     transcript = clippedRead.transcript(orientation="genomic")
     output = ""
