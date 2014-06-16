@@ -8,6 +8,7 @@ from itertools import groupby
 from operator import itemgetter
 
 from .consensus import consensus, align
+from .realign import realign
 
 ANSI_RED     = "\x1b[31m"
 ANSI_GREEN   = "\x1b[32m"
@@ -47,18 +48,18 @@ def formatSeparatorLine(refWindow):
     canvas[canvasCoords % 10 == 5] = "+"
     return canvas.tostring()
 
-def formatAlignedRead(cmpH5, refWindow, rowNumber):
-    canvas = np.zeros(refWindow.end - refWindow.start, dtype="S1")
-    canvas[:] = " "
-    clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
-    fullRead = np.fromstring(clippedRead.read(orientation="genomic"), dtype="S1")
-    transcript = np.fromstring(clippedRead.transcript(orientation="genomic"), dtype="S1")
-    noInsertionsRead = np.extract(transcript != "I", fullRead)
-    canvas[(clippedRead.tStart-refWindow.start):(clippedRead.tEnd-refWindow.start)] = \
-        noInsertionsRead
-    return canvas.tostring()
+# def formatAlignedRead(cmpH5, refWindow, rowNumber):
+#     canvas = np.zeros(refWindow.end - refWindow.start, dtype="S1")
+#     canvas[:] = " "
+#     clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+#     fullRead = np.fromstring(clippedRead.read(orientation="genomic"), dtype="S1")
+#     transcript = np.fromstring(clippedRead.transcript(orientation="genomic"), dtype="S1")
+#     noInsertionsRead = np.extract(transcript != "I", fullRead)
+#     canvas[(clippedRead.tStart-refWindow.start):(clippedRead.tEnd-refWindow.start)] = \
+#         noInsertionsRead
+#     return canvas.tostring()
 
-def formatAlignedRead3(cmpH5, refWindow, reference, rowNumber, useColor=False):
+def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
     try:
         clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
     except:
@@ -66,6 +67,32 @@ def formatAlignedRead3(cmpH5, refWindow, reference, rowNumber, useColor=False):
 
     read = clippedRead.read(orientation="genomic")
     transcript = clippedRead.transcript(orientation="genomic")
+    reference = clippedRead.reference(orientation="genomic")
+
+    reference, read, transcript = realign(reference, read, transcript)
+
+    rendered = ""
+    for x, r in zip(transcript, read):
+        if x == "R":
+            rendered += reverseRed(r) if useColor else r
+        elif x == "D":
+            rendered += "-"
+        elif x == "M":
+            rendered += r
+    startGap = clippedRead.tStart - refWindow.start
+    return " "*startGap + rendered
+
+
+def formatAlignedRead3(cmpH5, refWindow, rowNumber, useColor=False):
+    try:
+        clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
+    except:
+        return ""
+
+    read = clippedRead.read(orientation="genomic")
+    transcript = clippedRead.transcript(orientation="genomic")
+    reference = clippedRead.reference(orientation="genomic")
+
     validMoves = set(["R", "D", "M"])
 
     # get read absent any insertions (should be of refWindow length)
@@ -107,26 +134,6 @@ def formatAlignedRead3(cmpH5, refWindow, reference, rowNumber, useColor=False):
 
     return rendered
 
-def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
-    try:
-        clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
-    except:
-        return ""
-
-    read = clippedRead.read(orientation="genomic")
-    transcript = clippedRead.transcript(orientation="genomic")
-    rendered = ""
-    for x, r in zip(transcript, read):
-        if x == "R":
-            rendered += reverseRed(r) if useColor else r
-        elif x == "D":
-            rendered += "-"
-        elif x == "M":
-            rendered += r
-    startGap = clippedRead.tStart - refWindow.start
-    return " "*startGap + rendered
-
-
 def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
     # FIXME!  This code is incorrect for reads that start partway through the window!
     # Ex, reads 14 and 1784 from ref000001:1-100 of job 038537
@@ -140,10 +147,6 @@ def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
             if useColor: output += red(readChar.lower())
             else:        output += readChar.lower()
     return output
-
-def formatAlignedReads2(cmpH5, refWindow, referenceInWindow, rowNumbers, useColor=False):
-    return [ formatAlignedRead3(cmpH5, refWindow, referenceInWindow, rowNumber, useColor)
-             for rowNumber in rowNumbers ]
 
 def formatAlignedReads(cmpH5, refWindow, rowNumbers, useColor=False):
     return [ formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor)

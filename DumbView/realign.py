@@ -39,7 +39,6 @@ def realign(t, q, x):
 
     goAgain = True
     while goAgain:
-        print "Scan"
         goAgain = rewriteScan(t, q, x)
 
     return (toString(t), toString(q), toString(x))
