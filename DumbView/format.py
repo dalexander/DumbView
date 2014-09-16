@@ -48,17 +48,6 @@ def formatSeparatorLine(refWindow):
     canvas[canvasCoords % 10 == 5] = "+"
     return canvas.tostring()
 
-# def formatAlignedRead(cmpH5, refWindow, rowNumber):
-#     canvas = np.zeros(refWindow.end - refWindow.start, dtype="S1")
-#     canvas[:] = " "
-#     clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
-#     fullRead = np.fromstring(clippedRead.read(orientation="genomic"), dtype="S1")
-#     transcript = np.fromstring(clippedRead.transcript(orientation="genomic"), dtype="S1")
-#     noInsertionsRead = np.extract(transcript != "I", fullRead)
-#     canvas[(clippedRead.tStart-refWindow.start):(clippedRead.tEnd-refWindow.start)] = \
-#         noInsertionsRead
-#     return canvas.tostring()
-
 def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
     try:
         clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
@@ -79,60 +68,14 @@ def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
             rendered += "-"
         elif x == "M":
             rendered += r
-    startGap = clippedRead.tStart - refWindow.start
-    return " "*startGap + rendered
 
-
-def formatAlignedRead3(cmpH5, refWindow, rowNumber, useColor=False):
-    try:
-        clippedRead = cmpH5[rowNumber].clippedTo(refWindow.start, refWindow.end)
-    except:
-        return ""
-
-    read = clippedRead.read(orientation="genomic")
-    transcript = clippedRead.transcript(orientation="genomic")
-    reference = clippedRead.reference(orientation="genomic")
-
-    validMoves = set(["R", "D", "M"])
-
-    # get read absent any insertions (should be of refWindow length)
-    read, transcript = [
-        "".join(itr) for itr in zip(*[
-            (r, x) for r, x in zip(read, transcript)
-            if x in validMoves])]
-
-    assert len(read) == len(reference)
-
-    def formatState(s, t):
-        if s == "R":   return reverseRed(t) if useColor else t
-        elif s == "D": return "-"
-        elif s == "M": return t
-        return ""
-
-    # if you have a sequence of Ds and Ms, move Ds up
-    def bubbleUpGaps(alignment):
-        validMoves = set(["D", "M"])
-        state = []
-        for x, q in alignment:
-            if x in validMoves:
-                state.append((x, q))
-            else:
-                state.sort(key=itemgetter(0))
-                for s, t in state:
-                    yield formatState(s, t)
-                state = []
-                yield formatState(x, q)
-        state.sort(key=itemgetter(0))
-        for s, t in state:
-            yield formatState(s, t)
+    extras = ""
+    if cmpH5.moviesAttached:
+        for snr in clippedRead.zmw.hqRegionSnr:
+            extras += " {:4.1f}".format(snr)
 
     startGap = clippedRead.tStart - refWindow.start
-    # group by homopolymer in the reference, bubble up gaps to head of the HP
-    rendered = " " * startGap + "".join(
-        "".join(bubbleUpGaps(a for _, a  in ra))
-        for _, ra in groupby(zip(reference, zip(transcript, read)), itemgetter(0)))
-
-    return rendered
+    return " "*startGap + rendered + extras
 
 def formatUnalignedRead(cmpH5, refWindow, rowNumber, useColor=False):
     # FIXME!  This code is incorrect for reads that start partway through the window!

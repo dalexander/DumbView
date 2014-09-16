@@ -63,6 +63,10 @@ def mainGff(options):
     assert os.path.isfile(referenceFname)
 
     cmpH5 = CmpH5Reader(cmpH5Fname)
+
+    if options.fofn is not None:
+        cmpH5.attach(options.fofn)
+
     referenceTable = loadReferences(referenceFname, cmpH5)
 
     for gffRecord in reader:
@@ -90,10 +94,15 @@ def mainGff(options):
 
 def mainCmpH5(options):
     cmpH5 = CmpH5Reader(options.inputCmpH5)
+    if options.fofn is not None:
+        cmpH5.attach(options.fofn)
+
     if options.referenceFilename:
         referenceTable = loadReferences(options.referenceFilename, cmpH5)
     else:
         referenceTable = None
+
+
 
     for refWindow in options.referenceWindows:
         refId = cmpH5.referenceInfo(refWindow.refId).ID
@@ -144,6 +153,7 @@ class DumbViewApp(PBToolRunner):
         arg("--aligned",   "-a", dest="aligned", action="store_true", default=True)
         arg("--oneAtATime", "-1", action="store_true", default=False)
         arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
+        arg("--fofn", default=None)
 
         self.parser.set_defaults(consensus=True)
         arg("--consensus",   "-C", action="store_true", dest="consensus")
