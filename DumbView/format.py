@@ -72,7 +72,11 @@ def formatAlignedRead2(cmpH5, refWindow, rowNumber, useColor=False):
     extras = ""
     if cmpH5.moviesAttached:
         for snr in clippedRead.zmw.hqRegionSnr:
-            extras += " {:4.1f}".format(snr)
+            snrStr = " {:4.1f}".format(snr)
+            if snr < 4.0:
+                extras += red(snrStr)
+            else:
+                extras += snrStr
 
     startGap = clippedRead.tStart - refWindow.start
     return " "*startGap + rendered + extras
