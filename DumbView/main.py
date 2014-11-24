@@ -13,6 +13,30 @@ from GenomicConsensus.utils import readsInWindow
 def loadReferences(fastaFilename, cmpH5):
     return FastaTable(fastaFilename)
 
+def dumpVariantCsv(fname, cmpH5, alns, gffRecord, width=5):
+    # Dump a CSV file for pulserecognizer with the following columns:
+    # MovieName,HoleNumber,rStart,rEnd
+    refId    = cmpH5.referenceInfo(gffRecord.seqid).ID
+    refStart = gffRecord.start - 1  # 1 to 0 based coordinates
+    refEnd   = gffRecord.end
+
+    expandedRange = (refStart - width, refEnd + width)
+
+    with open(fname, "w") as f:
+        f.write("MovieName,HoleNumber,rStart,rEnd\n")
+        for aln in alns:
+            if aln.spansReferenceRange(*expandedRange):
+                ca = aln.clippedTo(*expandedRange)
+                f.write("%s,%d,%d,%d\n" %
+                        (ca.movieInfo.Name,
+                         ca.HoleNumber,
+                         ca.rStart,
+                         ca.rEnd))
+
+
+def formatVariantCsvLink(fname):
+    print "  Link for pulse recognizer: <a href=./" + fname + ">" + fname + "</a>\n"
+
 def extractCmpH5AndReferenceFromGff(gffReader):
     #
     # New way
@@ -69,7 +93,7 @@ def mainGff(options):
 
     referenceTable = loadReferences(referenceFname, cmpH5)
 
-    for gffRecord in reader:
+    for i, gffRecord in enumerate(reader):
         referenceSeq = gffRecord.get("reference", "-")
         variantSeq   = gffRecord.get("variantSeq", "-")
         variantConfidence = gffRecord.confidence
@@ -90,6 +114,14 @@ def mainGff(options):
         formatWindow(cmpH5, refWindow, alns, referenceTable,
                      aligned=(gffRecord.type != "insertion"),
                      consensus=options.consensus, useColor=options.color)
+
+
+        # CSV output
+        print
+        csvFname = "variant-" + str(i) +  ".csv"
+        dumpVariantCsv(csvFname, cmpH5, alns, gffRecord)
+        formatVariantCsvLink(csvFname)
+
         print
 
 def mainCmpH5(options):
@@ -191,10 +223,11 @@ class DumbViewApp(PBToolRunner):
         return "0.2"
 
     def run(self):
-        try:
-            import ipdb
-            with ipdb.launch_ipdb_on_exception():
-                _main(self.args)
-            return 0
-        except ImportError:
-            _main(self.args)
+        # try:
+        #     import ipdb
+        #     with ipdb.launch_ipdb_on_exception():
+        #         _main(self.args)
+        #     return 0
+        # except ImportError:
+        #     _main(self.args)
+        _main(self.args)
