@@ -18,7 +18,7 @@ def enlargedReferenceWindow(refWin, contigLength, overlap):
                   max(0, refStart - overlap),
                   min(refEnd + overlap + 1, contigLength))
 
-def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
+def consensus(cmpH5, refWindow, referenceTable, alns):
     # identify the enlarged interval [-5, +5]
     refName = cmpH5.referenceInfo(refWindow.refId).FullName
     refLength = len(referenceTable[refName].sequence)
@@ -28,8 +28,8 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
     # find 3-spanned intervals in the enlarged interval
     # call css for each interval
     subConsensi = []
-    tStart = cmpH5.tStart[rowNumbers]
-    tEnd   = cmpH5.tEnd[rowNumbers]
+    tStart = [ a.tStart for a in alns ]
+    tEnd = [ a.tEnd for a in alns ]
     coveredIntervals = w.kSpannedIntervals(eWindow, K, tStart, tEnd)
     holes = w.holes(eWindow, coveredIntervals)
 
@@ -41,11 +41,11 @@ def consensus(cmpH5, refWindow, referenceTable, rowNumbers=None):
                                            intEnd-eWindow.start]
         css_ = Consensus.nAsConsensus(subWin, intRefSeq)
         if interval in coveredIntervals:
-            rows = readsInWindow(cmpH5, subWin,
+            alns = readsInWindow(cmpH5, subWin,
                                  depthLimit=100,
                                  minMapQV=quiverConfig.minMapQV,
                                  strategy="longest")
-            clippedAlns = [ aln.clippedTo(*interval) for aln in cmpH5[rows]]
+            clippedAlns = [ aln.clippedTo(*interval) for aln in alns ]
             goodAlns = q.utils.filterAlns(subWin, clippedAlns, quiverConfig)
             if len(goodAlns) >= K:
                 css_ = q.utils.consensusForAlignments(subWin,

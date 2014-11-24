@@ -83,11 +83,11 @@ def mainGff(options):
                                               gffRecord.start-10,
                                               gffRecord.end+10))
         if "rows" in gffRecord.attributes:
-            rowNumbers = map(int, gffRecord.rows.split(","))
+            alns = cmpH5[map(int, gffRecord.rows.split(","))]
         else:
-            rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
-                                       minMapQV=options.minMapQV, strategy=options.sorting)
-        formatWindow(cmpH5, refWindow, rowNumbers, referenceTable,
+            alns = readsInWindow(cmpH5, refWindow, options.depth,
+                                 minMapQV=options.minMapQV, strategy=options.sorting)
+        formatWindow(cmpH5, refWindow, alns, referenceTable,
                      aligned=(gffRecord.type != "insertion"),
                      consensus=options.consensus, useColor=options.color)
         print
@@ -112,17 +112,17 @@ def mainCmpH5(options):
         refWindow = makeDisplayWindow(refLength, options.width, refWindow)
 
         if options.rowNumbers != None:
-            rowNumbers = options.rowNumbers
+            alns = cmpH5[options.rowNumbers]
         else:
-            rowNumbers = readsInWindow(cmpH5, refWindow, options.depth,
+            alns = readsInWindow(cmpH5, refWindow, options.depth,
                                        minMapQV=options.minMapQV, strategy=options.sorting)
 
         print windowToGffString(Window(refName, refWindow.start, refWindow.end))
 
         if options.oneAtATime:
-            formatIndividualAlignments(cmpH5, refWindow, rowNumbers)
+            formatIndividualAlignments(cmpH5, refWindow, alns)
         else:
-            formatWindow(cmpH5, refWindow, rowNumbers,
+            formatWindow(cmpH5, refWindow, alns,
                          referenceTable, options.aligned, options.color,
                          options.consensus)
         print

@@ -37,15 +37,14 @@ def main(options):
     refEnd = max(a.referenceEnd for a in allReads)
 
     refWindow = Window(refId, refStart, refEnd)
-    rowNumbers = [a.rowNumber for a in subreads]
     ccsRowNumber = ccsRead.rowNumber
 
     if options.oneAtATime:
-        formatIndividualAlignments(subreadCmp, refWindow, rowNumbers)
+        formatIndividualAlignments(subreadCmp, refWindow, subreads)
 
     else:
         for subWindow in windowChunks(refWindow):
-            formatWindow(subreadCmp, subWindow, rowNumbers,
+            formatWindow(subreadCmp, subWindow, subreads,
                          referenceTable, options.aligned, options.color)
             print
 
