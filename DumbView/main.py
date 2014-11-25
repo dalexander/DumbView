@@ -223,11 +223,10 @@ class DumbViewApp(PBToolRunner):
         return "0.2"
 
     def run(self):
-        # try:
-        #     import ipdb
-        #     with ipdb.launch_ipdb_on_exception():
-        #         _main(self.args)
-        #     return 0
-        # except ImportError:
-        #     _main(self.args)
-        _main(self.args)
+        try:
+            import ipdb
+            with ipdb.launch_ipdb_on_exception():
+                _main(self.args)
+            return 0
+        except ImportError:
+            _main(self.args)
