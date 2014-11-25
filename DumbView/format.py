@@ -143,7 +143,7 @@ def formatWindow(cmpH5, refWindow, alns,
 def spark(arr):
     idx = (np.array(arr, dtype=np.uint)/8).clip(0, len(SPARKS)-1)
     #print idx
-    return "".join(SPARKS[i] for i in idx)
+    return unicode("").join(SPARKS[i] for i in idx).encode("utf-8")
 
 def formatReferenceAndConsensus(cmpH5, refWindow, refTable, alns):
     refName = cmpH5.referenceInfo(refWindow.refId).FullName
