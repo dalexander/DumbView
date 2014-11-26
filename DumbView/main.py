@@ -15,7 +15,7 @@ def loadReferences(fastaFilename, cmpH5):
 
 def dumpVariantCsv(fname, cmpH5, alns, gffRecord, width=5):
     # Dump a CSV file for pulserecognizer with the following columns:
-    # MovieName,HoleNumber,rStart,rEnd
+    # Movie,HoleNumber,rStart,rEnd
     refId    = cmpH5.referenceInfo(gffRecord.seqid).ID
     refStart = gffRecord.start - 1  # 1 to 0 based coordinates
     refEnd   = gffRecord.end
@@ -23,7 +23,7 @@ def dumpVariantCsv(fname, cmpH5, alns, gffRecord, width=5):
     expandedRange = (refStart - width, refEnd + width)
 
     with open(fname, "w") as f:
-        f.write("MovieName,HoleNumber,rStart,rEnd\n")
+        f.write("Movie,HoleNumber,rStart,rEnd\n")
         for aln in alns:
             if aln.spansReferenceRange(*expandedRange):
                 ca = aln.clippedTo(*expandedRange)
