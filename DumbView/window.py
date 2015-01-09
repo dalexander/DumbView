@@ -55,4 +55,8 @@ def integerValue(s):
         return None
 
 def grok(s):
-    return integerValue(s) or s
+    iv = integerValue(s)
+    if integerValue is None:
+        return s
+    else:
+        return iv
