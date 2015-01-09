@@ -48,7 +48,7 @@ def formatSeparatorLine(refWindow):
     canvas[canvasCoords % 10 == 5] = "+"
     return canvas.tostring()
 
-def formatAlignedRead2(cmpH5, refWindow, aln, useColor=False):
+def formatAlignedRead2(alnReader, refWindow, aln, useColor=False):
     try:
         clippedRead = aln.clippedTo(refWindow.start, refWindow.end)
     except:
@@ -70,7 +70,7 @@ def formatAlignedRead2(cmpH5, refWindow, aln, useColor=False):
             rendered += r
 
     extras = ""
-    if cmpH5.moviesAttached:
+    if alnReader.moviesAttached:
         for snr in clippedRead.zmw.hqRegionSnr:
             snrStr = " {:4.1f}".format(snr)
             if snr < 4.0:
@@ -81,7 +81,7 @@ def formatAlignedRead2(cmpH5, refWindow, aln, useColor=False):
     startGap = clippedRead.tStart - refWindow.start
     return " "*startGap + rendered + extras
 
-def formatUnalignedRead(cmpH5, refWindow, aln, useColor=False):
+def formatUnalignedRead(alnReader, refWindow, aln, useColor=False):
     # FIXME!  This code is incorrect for reads that start partway through the window!
     # Ex, reads 14 and 1784 from ref000001:1-100 of job 038537
     try:
@@ -98,24 +98,24 @@ def formatUnalignedRead(cmpH5, refWindow, aln, useColor=False):
             else:        output += readChar.lower()
     return output
 
-def formatAlignedReads(cmpH5, refWindow, alns, useColor=False):
-    return [ formatAlignedRead2(cmpH5, refWindow, aln, useColor)
+def formatAlignedReads(alnReader, refWindow, alns, useColor=False):
+    return [ formatAlignedRead2(alnReader, refWindow, aln, useColor)
              for aln in alns ]
 
-def formatUnalignedReads(cmpH5, refWindow, alns, useColor=False):
-    return [ formatUnalignedRead(cmpH5, refWindow, aln, useColor)
+def formatUnalignedReads(alnReader, refWindow, alns, useColor=False):
+    return [ formatUnalignedRead(alnReader, refWindow, aln, useColor)
              for aln in alns ]
 
-def formatConsensus(cmpH5, refWindow, alns, refTable):
-    cssObj = consensus(cmpH5, refWindow, alns, refTable)
+def formatConsensus(alnReader, refWindow, alns, refTable):
+    cssObj = consensus(alnReader, refWindow, alns, refTable)
     print "     CSS  " + cssObj.sequence
     print " " * 10 + spark(cssObj.confidence)
 
-def formatWindow(cmpH5, refWindow, alns,
+def formatWindow(alnReader, refWindow, alns,
                  referenceTable=None, aligned=True, useColor=True, consensus=True):
 
     if referenceTable:
-        refName = cmpH5.referenceInfo(refWindow.refId).FullName
+        refName = alnReader.referenceInfo(refWindow.refId).FullName
         referenceInWindow = referenceTable[refName].sequence[refWindow.start:refWindow.end]
     else:
         referenceInWindow = None
@@ -127,9 +127,9 @@ def formatWindow(cmpH5, refWindow, alns,
     print preMargin + formatSeparatorLine(refWindow)
 
     if aligned:
-        formattedReads = formatAlignedReads(cmpH5, refWindow, alns, useColor)
+        formattedReads = formatAlignedReads(alnReader, refWindow, alns, useColor)
     else:
-        formattedReads = formatUnalignedReads(cmpH5, refWindow, alns, useColor)
+        formattedReads = formatUnalignedReads(alnReader, refWindow, alns, useColor)
 
     for aln, ar in zip(alns, formattedReads):
         print ("%8d  " % aln.rowNumber)  + ar
@@ -138,16 +138,16 @@ def formatWindow(cmpH5, refWindow, alns,
         print
         print preMargin + formatReferenceCoordinates(refWindow)
         print preMargin + formatSeparatorLine(refWindow)
-        formatReferenceAndConsensus(cmpH5, refWindow, referenceTable, alns)
+        formatReferenceAndConsensus(alnReader, refWindow, referenceTable, alns)
 
 def spark(arr):
     idx = (np.array(arr, dtype=np.uint)/8).clip(0, len(SPARKS)-1)
     #print idx
     return unicode("").join(SPARKS[i] for i in idx).encode("utf-8")
 
-def formatReferenceAndConsensus(cmpH5, refWindow, refTable, alns):
-    refName = cmpH5.referenceInfo(refWindow.refId).FullName
-    cssObj = consensus(cmpH5, refWindow, refTable, alns)
+def formatReferenceAndConsensus(alnReader, refWindow, refTable, alns):
+    refName = alnReader.referenceInfo(refWindow.refId).FullName
+    cssObj = consensus(alnReader, refWindow, refTable, alns)
     refInWindow = refTable[refName].sequence[refWindow.start:refWindow.end]
     alnRef, transcript, alnQuery = align(refInWindow, cssObj.sequence)
 
@@ -171,7 +171,7 @@ def formatReferenceAndConsensus(cmpH5, refWindow, refTable, alns):
     print " " * 10 + spark(cssObj.confidence)
 
 
-def formatIndividualAlignments(cmpH5, refWindow, alns):
+def formatIndividualAlignments(alnReader, refWindow, alns):
     for aln in alns:
         print "--"
         print "Row number %d" % aln.rowNumber

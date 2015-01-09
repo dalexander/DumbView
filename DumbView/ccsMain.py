@@ -1,4 +1,4 @@
-from pbcore.io import CmpH5Reader, FastaTable
+from pbcore.io import loadAlignmentFile, FastaTable
 from pbcore.util.ToolRunner import PBToolRunner
 import sys, argparse, os
 
@@ -13,16 +13,15 @@ def windowChunks(refWindow, WIDTH=60):
         yield Window(refId, s, e)
 
 def main(options):
-    subreadCmp = CmpH5Reader(options.subreads)
-    ccsCmp = CmpH5Reader(options.ccs)
+    alnSubreads = loadAlignmentFile(options.subreads)
+    alnCCS = loadAlignmentFile(options.ccs)
     if options.referenceFilename:
-        referenceTable = loadReferences(options.referenceFilename, subreadCmp)
+        referenceTable = loadReferences(options.referenceFilename, alnSubreads)
     else:
         referenceTable = None
 
-
-    subreads = subreadCmp.readsForZmw(options.zmw)
-    ccsReads = ccsCmp.readsForZmw(options.zmw)
+    subreads = alnSubreads.readsForZmw(options.zmw)
+    ccsReads = alnCCS.readsForZmw(options.zmw)
     allReads = subreads + ccsReads
 
     assert len(ccsReads) == 1
@@ -40,7 +39,7 @@ def main(options):
     ccsRowNumber = ccsRead.rowNumber
 
     if options.oneAtATime:
-        formatIndividualAlignments(subreadCmp, refWindow, subreads)
+        formatIndividualAlignments(alnSubreads, refWindow, subreads)
 
     else:
         for subWindow in windowChunks(refWindow):

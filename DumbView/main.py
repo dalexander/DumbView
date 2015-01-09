@@ -10,13 +10,13 @@ from DumbView.format import *
 from DumbView.window import *
 from GenomicConsensus.utils import readsInWindow
 
-def loadReferences(fastaFilename, cmpH5):
+def loadReferences(fastaFilename, alnReader):
     return FastaTable(fastaFilename)
 
-def dumpVariantCsv(fname, cmpH5, alns, gffRecord, width=5):
+def dumpVariantCsv(fname, alnReader, alns, gffRecord, width=5):
     # Dump a CSV file for pulserecognizer with the following columns:
     # Movie,HoleNumber,rStart,rEnd
-    refId    = cmpH5.referenceInfo(gffRecord.seqid).ID
+    refId    = alnReader.referenceInfo(gffRecord.seqid).ID
     refStart = gffRecord.start - 1  # 1 to 0 based coordinates
     refEnd   = gffRecord.end
 
@@ -41,22 +41,22 @@ def extractCmpH5AndReferenceFromGff(gffReader):
     #
     # New way
     #
-    cmpH5 = None
+    alnReader = None
     reference = None
     for h in gffReader.headers:
         if h.startswith("##source-alignment-file"):
-            cmpH5 = h.split()[1]
+            alnReader = h.split()[1]
         elif h.startswith("##source-reference-file"):
             reference = h.split()[1]
-        if cmpH5 and reference:
-            return cmpH5, reference
+        if alnReader and reference:
+            return alnReader, reference
 
     #
     # Old way
     #
     # This code is a horrible hack and an affront to good taste and I
     # blame Python's stdlib for making this the way I had to do it.
-    cmpH5 = None
+    alnReader = None
     reference = None
     for header in gffReader.headers:
         if header.startswith("##source-commandline"):
@@ -72,26 +72,26 @@ def extractCmpH5AndReferenceFromGff(gffReader):
                             break
             for arg in args:
                 if arg.endswith(".cmp.h5") or arg.endswith(".bam"):
-                    cmpH5 = arg
+                    alnReader = arg
                     break
-    return cmpH5, reference
+    return alnReader, reference
 
 def mainGff(options):
     reader = GffReader(options.inputGff)
-    cmpH5Fname, referenceFname = extractCmpH5AndReferenceFromGff(reader)
+    alnsFname, referenceFname = extractCmpH5AndReferenceFromGff(reader)
     # Allow overriding
-    cmpH5Fname = options.inputCmpH5 or cmpH5Fname
+    alnsFname = options.inputCmpH5 or alnReaderFname
     referenceFname = options.referenceFilename or referenceFname
 
-    assert os.path.isfile(cmpH5Fname)
+    assert os.path.isfile(alnsFname)
     assert os.path.isfile(referenceFname)
 
-    cmpH5 = openAlignmentFile(cmpH5Fname, referenceFname)
+    alnReader = openAlignmentFile(alnsFname, referenceFname)
 
     if options.fofn is not None:
-        cmpH5.attach(options.fofn)
+        alnReader.attach(options.fofn)
 
-    referenceTable = loadReferences(referenceFname, cmpH5)
+    referenceTable = loadReferences(referenceFname, alnReader)
 
     for i, gffRecord in enumerate(reader):
         referenceSeq = gffRecord.get("reference", "-")
@@ -100,18 +100,18 @@ def mainGff(options):
         variantSummary = "(%s > %s)" % (referenceSeq, variantSeq)
         print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, \
             variantSummary, variantConfidence
-        refId = cmpH5.referenceInfo(gffRecord.seqid).ID
-        refLength = cmpH5.referenceInfo(gffRecord.seqid).Length
+        refId = alnReader.referenceInfo(gffRecord.seqid).ID
+        refLength = alnReader.referenceInfo(gffRecord.seqid).Length
         refWindow = makeDisplayWindow(refLength, options.width,
                                        Window(refId,
                                               gffRecord.start-10,
                                               gffRecord.end+10))
         if "rows" in gffRecord.attributes:
-            alns = cmpH5[map(int, gffRecord.rows.split(","))]
+            alns = alnReader[map(int, gffRecord.rows.split(","))]
         else:
-            alns = readsInWindow(cmpH5, refWindow, options.depth,
+            alns = readsInWindow(alnReader, refWindow, options.depth,
                                  minMapQV=options.minMapQV, strategy=options.sorting)
-        formatWindow(cmpH5, refWindow, alns, referenceTable,
+        formatWindow(alnReader, refWindow, alns, referenceTable,
                      aligned=(gffRecord.type != "insertion"),
                      consensus=options.consensus, useColor=options.color)
 
@@ -125,34 +125,34 @@ def mainGff(options):
         print
 
 def mainCmpH5(options):
-    cmpH5 = openAlignmentFile(options.inputCmpH5, options.referenceFilename)
+    alnReader = openAlignmentFile(options.inputCmpH5, options.referenceFilename)
     if options.fofn is not None:
-        cmpH5.attach(options.fofn)
+        alnReader.attach(options.fofn)
 
     if options.referenceFilename:
-        referenceTable = loadReferences(options.referenceFilename, cmpH5)
+        referenceTable = loadReferences(options.referenceFilename, alnReader)
     else:
         referenceTable = None
 
     for refWindow in options.referenceWindows:
-        refId = cmpH5.referenceInfo(refWindow.refId).ID
-        refName = cmpH5.referenceInfo(refWindow.refId).FullName
-        refLength = cmpH5.referenceInfo(refWindow.refId).Length
+        refId = alnReader.referenceInfo(refWindow.refId).ID
+        refName = alnReader.referenceInfo(refWindow.refId).FullName
+        refLength = alnReader.referenceInfo(refWindow.refId).Length
         refWindow = refWindow._replace(refId=refId)
         refWindow = makeDisplayWindow(refLength, options.width, refWindow)
 
         if options.rowNumbers != None:
-            alns = cmpH5[options.rowNumbers]
+            alns = alnReader[options.rowNumbers]
         else:
-            alns = readsInWindow(cmpH5, refWindow, options.depth,
+            alns = readsInWindow(alnReader, refWindow, options.depth,
                                        minMapQV=options.minMapQV, strategy=options.sorting)
 
         print windowToGffString(Window(refName, refWindow.start, refWindow.end))
 
         if options.oneAtATime:
-            formatIndividualAlignments(cmpH5, refWindow, alns)
+            formatIndividualAlignments(alnReader, refWindow, alns)
         else:
-            formatWindow(cmpH5, refWindow, alns,
+            formatWindow(alnReader, refWindow, alns,
                          referenceTable, options.aligned, options.color,
                          options.consensus)
         print

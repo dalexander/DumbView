@@ -18,9 +18,9 @@ def enlargedReferenceWindow(refWin, contigLength, overlap):
                   max(0, refStart - overlap),
                   min(refEnd + overlap + 1, contigLength))
 
-def consensus(cmpH5, refWindow, referenceTable, alns):
+def consensus(alnReader, refWindow, referenceTable, alns):
     # identify the enlarged interval [-5, +5]
-    refName = cmpH5.referenceInfo(refWindow.refId).FullName
+    refName = alnReader.referenceInfo(refWindow.refId).FullName
     refLength = len(referenceTable[refName].sequence)
     eWindow = enlargedReferenceWindow(refWindow, refLength, overlap)
     refSeqInEnlargedWindow = referenceTable[refName].sequence[eWindow.start:eWindow.end]
@@ -41,7 +41,7 @@ def consensus(cmpH5, refWindow, referenceTable, alns):
                                            intEnd-eWindow.start]
         css_ = Consensus.nAsConsensus(subWin, intRefSeq)
         if interval in coveredIntervals:
-            alns = readsInWindow(cmpH5, subWin,
+            alns = readsInWindow(alnReader, subWin,
                                  depthLimit=100,
                                  minMapQV=quiverConfig.minMapQV,
                                  strategy="longest")
