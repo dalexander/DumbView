@@ -4,7 +4,7 @@
 #
 
 import argparse, os, os.path, shlex, sys
-from pbcore.io import CmpH5Reader, GffReader, FastaTable
+from pbcore.io import openAlignmentFile, GffReader, FastaTable
 from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
 from DumbView.window import *
@@ -71,7 +71,7 @@ def extractCmpH5AndReferenceFromGff(gffReader):
                             reference = arg.split("=")[1]
                             break
             for arg in args:
-                if arg.endswith(".cmp.h5"):
+                if arg.endswith(".cmp.h5") or arg.endswith(".bam"):
                     cmpH5 = arg
                     break
     return cmpH5, reference
@@ -86,7 +86,7 @@ def mainGff(options):
     assert os.path.isfile(cmpH5Fname)
     assert os.path.isfile(referenceFname)
 
-    cmpH5 = CmpH5Reader(cmpH5Fname)
+    cmpH5 = openAlignmentFile(cmpH5Fname, referenceFname)
 
     if options.fofn is not None:
         cmpH5.attach(options.fofn)
@@ -125,7 +125,7 @@ def mainGff(options):
         print
 
 def mainCmpH5(options):
-    cmpH5 = CmpH5Reader(options.inputCmpH5)
+    cmpH5 = openAlignmentFile(options.inputCmpH5, options.referenceFilename)
     if options.fofn is not None:
         cmpH5.attach(options.fofn)
 
@@ -133,8 +133,6 @@ def mainCmpH5(options):
         referenceTable = loadReferences(options.referenceFilename, cmpH5)
     else:
         referenceTable = None
-
-
 
     for refWindow in options.referenceWindows:
         refId = cmpH5.referenceInfo(refWindow.refId).ID
@@ -212,7 +210,7 @@ class DumbViewApp(PBToolRunner):
         for fname in self.args.inputFilenames:
             if fname.endswith(".gff") or fname.endswith(".gff.gz"):
                 self.args.inputGff = fname
-            elif fname.endswith(".cmp.h5"):
+            elif fname.endswith(".cmp.h5") or fname.endswith(".bam"):
                 self.args.inputCmpH5 = fname
             else:
                 print "Invalid input file"
