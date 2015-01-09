@@ -115,12 +115,12 @@ def mainGff(options):
                      aligned=(gffRecord.type != "insertion"),
                      consensus=options.consensus, useColor=options.color)
 
-
-        # CSV output
-        print
-        csvFname = "variant-" + str(i) +  ".csv"
-        dumpVariantCsv(csvFname, cmpH5, alns, gffRecord)
-        formatVariantCsvLink(csvFname)
+        if options.pulseRecognizer:
+            # CSV output for pulse recognizer
+            print
+            csvFname = "variant-" + str(i) +  ".csv"
+            dumpVariantCsv(csvFname, alnReader, alns, gffRecord)
+            formatVariantCsvLink(csvFname)
 
         print
 
@@ -184,7 +184,8 @@ class DumbViewApp(PBToolRunner):
         arg("--oneAtATime", "-1", action="store_true", default=False)
         arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
         arg("--fofn", default=None)
-
+        arg("--pulseRecognizer", action="store_true", default=False,
+            help="In variants.gff analysis mode, emit a CSV file for inspection in PulseRecognizer")
         self.parser.set_defaults(consensus=True)
         arg("--consensus",   "-C", action="store_true", dest="consensus")
         arg("--noConsensus", "-N", action="store_false", dest="consensus")
