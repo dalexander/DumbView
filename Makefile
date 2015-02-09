@@ -1,6 +1,6 @@
 
 
 test:
-	cram tests/basics.t
+	cram -v tests/*.t
 
 .PHONY: test

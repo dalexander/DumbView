@@ -10,31 +10,6 @@
   $ [ -f $VARIANTS_GFF ] || echo "MISSING FILE"
   $ [ -f $CMPH5        ] || echo "MISSING FILE"
 
-
-  $ $DV -r $LAMBDA_REF $CMPH5 $VARIANTS_GFF
-  deletion lambda_NEB3011 30890 30890 (G > .) 25
-                           30900
-       Ref  AGCCTGACGGGCAATGCTGC
-            ====+====|====+====|
-        63  -GCCTGACGGG---TGCTGC
-        64  -GCCTGAC-GGC-AT-CTG-
-        65  AGCCTGACGGG--A-GCTGC
-        66  AGCCTGAC--GCAATGCTGC
-        67  AGCCTGACG-GCAATGCTGC
-  
-  insertion lambda_NEB3011 30924 30924 (. > G) 25
-             30920              
-       Ref  TGCTGAGGTGTCATTGAACA
-            +====|====+====|====
-        63  TtGTGgAGGTGgTCATTGAtACA
-        64  TGCTGcAGGGTCATTGAACA
-        65  TCcTGAGGGgTaCATTGAAccC
-        66  TGCTGAaGGTGATTGAACA
-        67  TGgCGAGGTGTATTAACA
-  
-
-
-
   $ $DV $CMPH5 -w1:10 -W20
   lambda_NEB3011:1-19
                                

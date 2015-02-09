@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "DumbView",
-    version="0.3.0",
+    version="0.3.1",
     author="Pacific Biosciences",
     author_email="dalexander@pacificbiosciences.com",
     scripts = ["bin/dumbview", "bin/dumbview-ccs"],

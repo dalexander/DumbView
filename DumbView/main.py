@@ -80,7 +80,7 @@ def mainGff(options):
     reader = GffReader(options.inputGff)
     alnsFname, referenceFname = extractCmpH5AndReferenceFromGff(reader)
     # Allow overriding
-    alnsFname = options.inputCmpH5 or alnReaderFname
+    alnsFname = options.inputCmpH5 or alnsFname
     referenceFname = options.referenceFilename or referenceFname
 
     assert os.path.isfile(alnsFname)
