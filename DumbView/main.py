@@ -8,6 +8,7 @@ from pbcore.io import openAlignmentFile, GffReader, FastaTable
 from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
 from DumbView.window import *
+from DumbView import __VERSION__
 from GenomicConsensus.utils import readsInWindow
 
 def loadReferences(fastaFilename, alnReader):
@@ -219,7 +220,7 @@ class DumbViewApp(PBToolRunner):
 
 
     def getVersion(self):
-        return "0.2"
+        return __VERSION__
 
     def run(self):
         try:

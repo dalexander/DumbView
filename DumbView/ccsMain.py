@@ -5,6 +5,7 @@ import sys, argparse, os
 from DumbView.main import loadReferences
 from DumbView.window import Window
 from DumbView.format import *
+from DumbView import __VERSION__
 
 def windowChunks(refWindow, WIDTH=60):
     refId = refWindow.refId
@@ -84,7 +85,8 @@ class DumbViewCCSApp(PBToolRunner):
             action=ColorAction, default=os.isatty(1))
 
     def getVersion(self):
-        return "0.2"
+        return __VERSION__
+
 
     def run(self):
         try:

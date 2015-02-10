@@ -1,8 +1,12 @@
 from setuptools import setup, find_packages
 
+globals = {}
+execfile("DumbView/__init__.py", globals)
+__VERSION__ = globals["__VERSION__"]
+
 setup(
     name = "DumbView",
-    version="0.3.1",
+    version=__VERSION__,
     author="Pacific Biosciences",
     author_email="dalexander@pacificbiosciences.com",
     scripts = ["bin/dumbview", "bin/dumbview-ccs"],
