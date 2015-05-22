@@ -132,7 +132,11 @@ def formatWindow(alnReader, refWindow, alns,
         formattedReads = formatUnalignedReads(alnReader, refWindow, alns, useColor)
 
     for aln, ar in zip(alns, formattedReads):
-        print ("%8d  " % aln.rowNumber)  + ar
+        if aln.rowNumber is None:
+            rowId = " " * 8
+        else:
+            rowId = "%8d  " % aln.rowNumber
+        print rowId + ar
 
     if referenceTable and consensus:
         print
