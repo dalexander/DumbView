@@ -133,7 +133,7 @@ def formatWindow(alnReader, refWindow, alns,
 
     for aln, ar in zip(alns, formattedReads):
         if aln.rowNumber is None:
-            rowId = " " * 8
+            rowId = " " * 10
         else:
             rowId = "%8d  " % aln.rowNumber
         print rowId + ar
