@@ -4,7 +4,7 @@
 #
 
 import argparse, os, os.path, shlex, sys
-from pbcore.io import openAlignmentFile, GffReader, FastaTable
+from pbcore.io import AlignmentSet, GffReader, FastaTable
 from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
 from DumbView.window import *
@@ -87,7 +87,7 @@ def mainGff(options):
     assert os.path.isfile(alnsFname)
     assert os.path.isfile(referenceFname)
 
-    alnReader = openAlignmentFile(alnsFname, referenceFname)
+    alnReader = AlignmentSet(alnsFname, referenceFastaFname=referenceFname)
 
     if options.fofn is not None:
         alnReader.attach(options.fofn)
@@ -126,7 +126,8 @@ def mainGff(options):
         print
 
 def mainCmpH5(options):
-    alnReader = openAlignmentFile(options.inputCmpH5, options.referenceFilename)
+    alnReader = AlignmentSet(options.inputCmpH5,
+                             referenceFastaFname=options.referenceFilename)
     if options.fofn is not None:
         alnReader.attach(options.fofn)
 
