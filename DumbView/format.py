@@ -69,17 +69,8 @@ def formatAlignedRead2(alnReader, refWindow, aln, useColor=False):
         elif x == "M":
             rendered += r
 
-    extras = ""
-    if alnReader.moviesAttached:
-        for snr in clippedRead.zmw.hqRegionSnr:
-            snrStr = " {:4.1f}".format(snr)
-            if snr < 4.0:
-                extras += red(snrStr)
-            else:
-                extras += snrStr
-
     startGap = clippedRead.tStart - refWindow.start
-    return " "*startGap + rendered + extras
+    return " "*startGap + rendered
 
 def formatUnalignedRead(alnReader, refWindow, aln, useColor=False):
     # FIXME!  This code is incorrect for reads that start partway through the window!
