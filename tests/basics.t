@@ -10,7 +10,7 @@
   $ [ -f $VARIANTS_GFF ] || echo "MISSING FILE"
   $ [ -f $CMPH5        ] || echo "MISSING FILE"
 
-  $ $DV $CMPH5 -w1:10 -W20
+  $ $DV $CMPH5 -wlambda_NEB3011:10 -W20
   lambda_NEB3011:1-19
                                
             ====+====|====+====
@@ -20,7 +20,7 @@
 
 
 
-  $ $DV $CMPH5 -w1:30900 -W20
+  $ $DV $CMPH5 -wlambda_NEB3011:30900 -W20
   lambda_NEB3011:30890-30909
                   30900         
             |====+====|====+====
@@ -33,7 +33,7 @@
 
 
 
-  $ $DV $CMPH5 -w1:30900 -W60
+  $ $DV $CMPH5 -wlambda_NEB3011:30900 -W60
   lambda_NEB3011:30870-30929
                   30880               30900               30920         
             |====+====|====+====|====+====|====+====|====+====|====+====

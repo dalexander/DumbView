@@ -50,13 +50,15 @@ def makeDisplayWindow(contigLen, width, refWindow):
 
 def integerValue(s):
     try:
-        return int(s)
+        if s.isdigit():
+            return int(s)
     except:
-        return None
+        pass
+    return None
 
 def grok(s):
     iv = integerValue(s)
-    if integerValue is None:
+    if iv is None:
         return s
     else:
         return iv

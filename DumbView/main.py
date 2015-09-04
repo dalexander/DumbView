@@ -17,7 +17,7 @@ def loadReferences(fastaFilename, alnReader):
 def dumpVariantCsv(fname, alnReader, alns, gffRecord, width=5):
     # Dump a CSV file for pulserecognizer with the following columns:
     # Movie,HoleNumber,rStart,rEnd
-    refId    = alnReader.referenceInfo(gffRecord.seqid).ID
+    refId    = gffRecord.seqid
     refStart = gffRecord.start - 1  # 1 to 0 based coordinates
     refEnd   = gffRecord.end
 
@@ -101,7 +101,7 @@ def mainGff(options):
         variantSummary = "(%s > %s)" % (referenceSeq, variantSeq)
         print gffRecord.type, gffRecord.seqid, gffRecord.start, gffRecord.end, \
             variantSummary, variantConfidence
-        refId = alnReader.referenceInfo(gffRecord.seqid).ID
+        refId = gffRecord.seqid
         refLength = alnReader.referenceInfo(gffRecord.seqid).Length
         refWindow = makeDisplayWindow(refLength, options.width,
                                        Window(refId,
@@ -137,7 +137,7 @@ def mainCmpH5(options):
         referenceTable = None
 
     for refWindow in options.referenceWindows:
-        refId = alnReader.referenceInfo(refWindow.refId).ID
+        refId = refWindow.refId
         refName = alnReader.referenceInfo(refWindow.refId).FullName
         refLength = alnReader.referenceInfo(refWindow.refId).Length
         refWindow = refWindow._replace(refId=refId)
