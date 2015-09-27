@@ -52,31 +52,6 @@ def extractCmpH5AndReferenceFromGff(gffReader):
         if alnReader and reference:
             return alnReader, reference
 
-    #
-    # Old way
-    #
-    # This code is a horrible hack and an affront to good taste and I
-    # blame Python's stdlib for making this the way I had to do it.
-    alnReader = None
-    reference = None
-    for header in gffReader.headers:
-        if header.startswith("##source-commandline"):
-            args = shlex.split(header)
-            for flag in ["-r", "--referenceFilename"]:
-                if flag in args:
-                    reference = args[args.index(flag) + 1]
-                    break
-                else:
-                    for arg in args:
-                        if arg.startswith(flag):
-                            reference = arg.split("=")[1]
-                            break
-            for arg in args:
-                if arg.endswith(".cmp.h5") or arg.endswith(".bam"):
-                    alnReader = arg
-                    break
-    return alnReader, reference
-
 def mainGff(options):
     reader = GffReader(options.inputGff)
     alnsFname, referenceFname = extractCmpH5AndReferenceFromGff(reader)
