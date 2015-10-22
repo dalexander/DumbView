@@ -4,7 +4,7 @@
 #
 
 import argparse, os, os.path, shlex, sys
-from pbcore.io import AlignmentSet, GffReader, FastaTable
+from pbcore.io import AlignmentSet, ReferenceSet, GffReader, IndexedFastaReader
 from pbcore.util.ToolRunner import PBToolRunner
 from DumbView.format import *
 from DumbView.window import *
@@ -12,7 +12,14 @@ from DumbView import __VERSION__
 from GenomicConsensus.utils import readsInWindow
 
 def loadReferences(fastaFilename, alnReader):
-    return FastaTable(fastaFilename)
+    # as of 3.0, quiver can be called with a "ReferenceSet" XML
+    # instead of just a FASTA.  Let's just unwrap the underlying FASTA
+    # file.  This code still works if a FASTA was provided.
+    dset = ReferenceSet(fastaFilename)
+    fastas = dset.toExternalFiles()
+    assert len(fastas) == 1
+    return IndexedFastaReader(fastas[0])
+
 
 def dumpVariantCsv(fname, alnReader, alns, gffRecord, width=5):
     # Dump a CSV file for pulserecognizer with the following columns:
