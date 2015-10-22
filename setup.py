@@ -14,7 +14,7 @@ setup(
     zip_safe = False,
     install_requires=[
         "GenomicConsensus >= 0.9.1",
-        "pbcore >= 0.9.3",
+        "pbcore >= 1.2.3",
         "numpy >= 1.6.0",
         "h5py >= 2.0.1"
         ]
