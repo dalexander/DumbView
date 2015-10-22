@@ -96,7 +96,9 @@ def mainGff(options):
                                  minMapQV=options.minMapQV, strategy=options.sorting)
         formatWindow(alnReader, refWindow, alns, referenceTable,
                      aligned=(gffRecord.type != "insertion"),
-                     consensus=options.consensus, useColor=options.color)
+                     consensus=options.consensus,
+                     useColor=options.color,
+                     realign=options.realign)
 
         if options.pulseRecognizer:
             # CSV output for pulse recognizer
@@ -138,7 +140,7 @@ def mainCmpH5(options):
         else:
             formatWindow(alnReader, refWindow, alns,
                          referenceTable, options.aligned, options.color,
-                         options.consensus)
+                         options.realign, options.consensus)
         print
 
 def _main(options):
@@ -173,6 +175,9 @@ class DumbViewApp(PBToolRunner):
         self.parser.set_defaults(consensus=True)
         arg("--consensus",   "-C", action="store_true", dest="consensus")
         arg("--noConsensus", "-N", action="store_false", dest="consensus")
+        self.parser.set_defaults(realign=True)
+        arg("--realign",   action="store_true", dest="realign", help="Enable simple gap-pushing realignment")
+        arg("--noRealign", action="store_false", dest="realign", help="Disable gap-pushing realignment; alignments directly from file")
 
         class ColorAction(argparse.Action):
             def __call__(self, parser, namespace, values, option_string=None):

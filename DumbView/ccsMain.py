@@ -45,7 +45,7 @@ def main(options):
     else:
         for subWindow in windowChunks(refWindow):
             formatWindow(subreadCmp, subWindow, subreads,
-                         referenceTable, options.aligned, options.color)
+                         referenceTable, options.aligned, options.color, options.realign)
             print
 
 

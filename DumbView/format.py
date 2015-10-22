@@ -48,7 +48,7 @@ def formatSeparatorLine(refWindow):
     canvas[canvasCoords % 10 == 5] = "+"
     return canvas.tostring()
 
-def formatAlignedRead2(alnReader, refWindow, aln, useColor=False):
+def formatAlignedRead2(alnReader, refWindow, aln, useColor=False, realign=False):
     try:
         clippedRead = aln.clippedTo(refWindow.start, refWindow.end)
     except:
@@ -58,7 +58,8 @@ def formatAlignedRead2(alnReader, refWindow, aln, useColor=False):
     transcript = clippedRead.transcript(orientation="genomic")
     reference = clippedRead.reference(orientation="genomic")
 
-    reference, read, transcript = realign(reference, read, transcript)
+    if realign:
+        reference, read, transcript = realign(reference, read, transcript)
 
     rendered = ""
     for x, r in zip(transcript, read):
@@ -89,8 +90,8 @@ def formatUnalignedRead(alnReader, refWindow, aln, useColor=False):
             else:        output += readChar.lower()
     return output
 
-def formatAlignedReads(alnReader, refWindow, alns, useColor=False):
-    return [ formatAlignedRead2(alnReader, refWindow, aln, useColor)
+def formatAlignedReads(alnReader, refWindow, alns, useColor=False, realign=False):
+    return [ formatAlignedRead2(alnReader, refWindow, aln, useColor, realign)
              for aln in alns ]
 
 def formatUnalignedReads(alnReader, refWindow, alns, useColor=False):
@@ -103,7 +104,7 @@ def formatConsensus(alnReader, refWindow, alns, refTable):
     print " " * 10 + spark(cssObj.confidence)
 
 def formatWindow(alnReader, refWindow, alns,
-                 referenceTable=None, aligned=True, useColor=True, consensus=True):
+                 referenceTable=None, aligned=True, useColor=True, realign=True, consensus=True):
 
     if referenceTable:
         refName = alnReader.referenceInfo(refWindow.refId).FullName
@@ -118,7 +119,7 @@ def formatWindow(alnReader, refWindow, alns,
     print preMargin + formatSeparatorLine(refWindow)
 
     if aligned:
-        formattedReads = formatAlignedReads(alnReader, refWindow, alns, useColor)
+        formattedReads = formatAlignedReads(alnReader, refWindow, alns, useColor, realign)
     else:
         formattedReads = formatUnalignedReads(alnReader, refWindow, alns, useColor)
 
