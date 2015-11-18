@@ -1,7 +1,7 @@
-import GenomicConsensus.quiver as q
 import ConsensusCore as cc
 import GenomicConsensus.windows as w
 
+from GenomicConsensus import arrow
 from GenomicConsensus.consensus import *
 from GenomicConsensus.utils import readsInWindow
 
@@ -9,7 +9,7 @@ from .window import Window, subWindow
 
 
 K = 3
-quiverConfig = q.model.loadQuiverConfig("unknown.NoQVsModel")
+arrowConfig = arrow.model.ArrowConfig()
 overlap = 5
 
 def enlargedReferenceWindow(refWin, contigLength, overlap):
@@ -43,15 +43,15 @@ def consensus(alnReader, refWindow, referenceTable, alns):
         if interval in coveredIntervals:
             alns = readsInWindow(alnReader, subWin,
                                  depthLimit=100,
-                                 minMapQV=quiverConfig.minMapQV,
+                                 minMapQV=arrowConfig.minMapQV,
                                  strategy="longest")
             clippedAlns = [ aln.clippedTo(*interval) for aln in alns ]
-            goodAlns = q.utils.filterAlns(subWin, clippedAlns, quiverConfig)
+            goodAlns = arrow.utils.filterAlns(subWin, clippedAlns, arrowConfig)
             if len(goodAlns) >= K:
-                css_ = q.utils.consensusForAlignments(subWin,
-                                                      intRefSeq,
-                                                      goodAlns,
-                                                      quiverConfig)
+                css_ = arrow.utils.consensusForAlignments(subWin,
+                                                          intRefSeq,
+                                                          goodAlns,
+                                                          arrowConfig)
 
         subConsensi.append(css_)
 
