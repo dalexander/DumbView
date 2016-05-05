@@ -59,6 +59,17 @@ def extractCmpH5AndReferenceFromGff(gffReader):
         if alnReader and reference:
             return alnReader, reference
 
+def interact(alnReader, refWindow, alns):
+    banner = "Local vars: alnReader, refWindow, alns, clippedAlns"
+    clippedAlns = [ aln.clippedTo(*refWindow[1:]) for aln in alns ]
+
+    try:
+        from IPython import embed
+        embed(banner1=banner)
+    except ImportError:
+        import code
+        code.InteractiveConsole(locals=locals()).interact(banner=banner)
+
 def mainGff(options):
     reader = GffReader(options.inputGff)
     alnsFname, referenceFname = extractCmpH5AndReferenceFromGff(reader)
@@ -135,7 +146,9 @@ def mainCmpH5(options):
 
         print windowToGffString(Window(refName, refWindow.start, refWindow.end))
 
-        if options.oneAtATime:
+        if options.interactive:
+            interact(alnReader, refWindow, alns)
+        elif options.oneAtATime:
             formatIndividualAlignments(alnReader, refWindow, alns)
         else:
             formatWindow(alnReader, refWindow, alns,
@@ -165,9 +178,13 @@ class DumbViewApp(PBToolRunner):
         arg("--minMapQV", "-m", type=int, default=10)
         arg("--rowNumbers", "-n", type=int, nargs="+", default=None)
         arg("--columns", type=str, nargs="+", default=None)
+
+        # Display mode
         arg("--unaligned", "-u", dest="aligned", action="store_false")
         arg("--aligned",   "-a", dest="aligned", action="store_true", default=True)
         arg("--oneAtATime", "-1", action="store_true", default=False)
+        arg("--interactive", "-i", action="store_true", default=False)
+
         arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
         arg("--fofn", default=None)
         arg("--pulseRecognizer", action="store_true", default=False,
