@@ -200,7 +200,7 @@ class DumbViewApp(PBToolRunner):
         for fname in self.args.inputFilenames:
             if fname.endswith(".gff") or fname.endswith(".gff.gz"):
                 self.args.inputGff = fname
-            elif fname.endswith(".cmp.h5") or fname.endswith(".bam"):
+            elif fname.endswith(".cmp.h5") or fname.endswith(".bam") or fname.endswith(".fofn"):
                 self.args.inputCmpH5 = fname
             else:
                 print "Invalid input file"
