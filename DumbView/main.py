@@ -109,7 +109,7 @@ def mainGff(options):
                      aligned=(gffRecord.type != "insertion"),
                      consensus=options.consensus,
                      useColor=options.color,
-                     realign=options.realign)
+                     doRealign=options.realign)
 
         if options.pulseRecognizer:
             # CSV output for pulse recognizer
@@ -179,7 +179,6 @@ class DumbViewApp(PBToolRunner):
         arg("--width", "-W", type=int, default=40)
         arg("--minMapQV", "-m", type=int, default=10)
         arg("--rowNumbers", "-n", type=int, nargs="+", default=None)
-        arg("--columns", type=str, nargs="+", default=None)
 
         # Display mode
         arg("--unaligned", "-u", dest="aligned", action="store_false")
@@ -189,7 +188,6 @@ class DumbViewApp(PBToolRunner):
         arg("--csv", action="store_true", default=False)
 
         arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
-        arg("--fofn", default=None)
         arg("--pulseRecognizer", action="store_true", default=False,
             help="In variants.gff analysis mode, emit a CSV file for inspection in PulseRecognizer")
         self.parser.set_defaults(consensus=True)
@@ -198,6 +196,11 @@ class DumbViewApp(PBToolRunner):
         self.parser.set_defaults(realign=True)
         arg("--realign",   action="store_true", dest="realign", help="Enable simple gap-pushing realignment")
         arg("--noRealign", action="store_false", dest="realign", help="Disable gap-pushing realignment; alignments directly from file")
+
+        # Advanced
+        arg("--fofn", default=None)
+        arg("--pdb", action="store_true", help="Drop into debugger on uncaught exception")
+        arg("--columns", type=str, nargs="+", default=None)
 
         class ColorAction(argparse.Action):
             def __call__(self, parser, namespace, values, option_string=None):
@@ -232,9 +235,12 @@ class DumbViewApp(PBToolRunner):
 
     def run(self):
         try:
-            import ipdb
-            with ipdb.launch_ipdb_on_exception():
+            if self.args.pdb:
+                import ipdb
+                with ipdb.launch_ipdb_on_exception():
+                    _main(self.args)
+                    return 0
+            else:
                 _main(self.args)
-            return 0
         except ImportError:
             _main(self.args)
