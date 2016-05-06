@@ -98,6 +98,41 @@ def formatUnalignedReads(alnReader, refWindow, alns, useColor=False):
     return [ formatUnalignedRead(alnReader, refWindow, aln, useColor)
              for aln in alns ]
 
+
+def formatCsvOutput(alnReader, refWindow, alns):
+
+    def emitRow(colVals):
+        print ",".join(map(str, colVals))
+
+    headerCols = ["RowNumber", "MovieName","HoleNumber","tName","tStrand","tStart","tEnd","aStart","aEnd",
+                  "Read","Reference","OrientedRead","AlignedRead","AlignedReference"]
+    if not alnReader.isCmpH5:
+        hasSnr=True
+        headerCols += ["SnrA", "SnrC", "SnrG", "SnrT"]
+    else:
+        hasSnr = False
+
+    emitRow(headerCols)
+
+    clippedAlns = [ aln.clippedTo(*refWindow[1:]) for aln in alns ]
+    for (aln, clippedAln) in zip(alns, clippedAlns):
+        row = [aln.rowNumber, aln.movieName, aln.holeNumber, aln.referenceName,
+               ("+" if aln.isForwardStrand else "-"),
+               aln.tStart, aln.tEnd, aln.aStart, aln.aEnd,
+               clippedAln.read(orientation="native", aligned=False),
+               clippedAln.reference(orientation="native",aligned=False),
+               clippedAln.read(orientation="genomic", aligned=False),
+               clippedAln.read(orientation="genomic", aligned=True),
+               clippedAln.reference(orientation="genomic", aligned=True)]
+
+        if hasSnr:
+            row += list(aln.hqRegionSnr)
+
+        emitRow(row)
+
+
+
+
 def formatConsensus(alnReader, refWindow, alns, refTable):
     cssObj = consensus(alnReader, refWindow, alns, refTable)
     print "     CSS  " + cssObj.sequence

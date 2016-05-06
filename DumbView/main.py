@@ -148,6 +148,8 @@ def mainCmpH5(options):
 
         if options.interactive:
             interact(alnReader, refWindow, alns)
+        elif options.csv:
+            formatCsvOutput(alnReader, refWindow, alns)
         elif options.oneAtATime:
             formatIndividualAlignments(alnReader, refWindow, alns)
         else:
@@ -184,6 +186,7 @@ class DumbViewApp(PBToolRunner):
         arg("--aligned",   "-a", dest="aligned", action="store_true", default=True)
         arg("--oneAtATime", "-1", action="store_true", default=False)
         arg("--interactive", "-i", action="store_true", default=False)
+        arg("--csv", action="store_true", default=False)
 
         arg("--sorting", "-s", choices=["fileorder", "longest", "spanning"], default="longest")
         arg("--fofn", default=None)
