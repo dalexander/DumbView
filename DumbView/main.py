@@ -144,19 +144,23 @@ def mainCmpH5(options):
             alns = readsInWindow(alnReader, refWindow, options.depth,
                                        minMapQV=options.minMapQV, strategy=options.sorting)
 
-        print windowToGffString(Window(refName, refWindow.start, refWindow.end))
+
 
         if options.interactive:
             interact(alnReader, refWindow, alns)
         elif options.csv:
             formatCsvOutput(alnReader, refWindow, alns)
         elif options.oneAtATime:
+            print windowToGffString(Window(refName, refWindow.start, refWindow.end))
             formatIndividualAlignments(alnReader, refWindow, alns)
+            print
         else:
+            print windowToGffString(Window(refName, refWindow.start, refWindow.end))
             formatWindow(alnReader, refWindow, alns,
                          referenceTable, options.aligned, options.color,
                          options.realign, options.consensus)
-        print
+            print
+
 
 def _main(options):
     if any([fn.endswith(".gff") or fn.endswith(".gff.gz")
