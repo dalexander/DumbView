@@ -52,12 +52,14 @@ def extractCmpH5AndReferenceFromGff(gffReader):
     alnReader = None
     reference = None
     for h in gffReader.headers:
-        if h.startswith("##source-alignment-file"):
-            alnReader = h.split()[1]
-        elif h.startswith("##source-reference-file"):
-            reference = h.split()[1]
+        parts = h.split()
+        if h.startswith("##source-alignment-file") and len(parts) > 1:
+            alnReader = parts[1]
+        elif h.startswith("##source-reference-file") and len(parts) > 1:
+            reference = parts[1]
         if alnReader and reference:
             return alnReader, reference
+    return alnReader, reference
 
 def interact(alnReader, refWindow, alns):
     banner = "Local vars: alnReader, refWindow, alns, clippedAlns"
@@ -101,7 +103,7 @@ def mainGff(options):
                                               gffRecord.start-10,
                                               gffRecord.end+10))
         if "rows" in gffRecord.attributes:
-            alns = alnReader[map(int, gffRecord.rows.split(","))]
+            alns = alnReader[list(map(int, gffRecord.attributes["rows"].split(",")))]
         else:
             alns = readsInWindow(alnReader, refWindow, options.depth,
                                  minMapQV=options.minMapQV, strategy=options.sorting)

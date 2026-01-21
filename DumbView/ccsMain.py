@@ -44,7 +44,7 @@ def main(options):
 
     else:
         for subWindow in windowChunks(refWindow):
-            formatWindow(subreadCmp, subWindow, subreads,
+            formatWindow(alnSubreads, subWindow, subreads,
                          referenceTable, options.aligned, options.color, options.realign)
             print
 
@@ -96,6 +96,7 @@ class DumbViewCCSApp(PBToolRunner):
             return 0
         except ImportError:
             main(self.args)
+            return 0
 
 
 if __name__ == "__main__":

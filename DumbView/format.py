@@ -134,7 +134,7 @@ def formatCsvOutput(alnReader, refWindow, alns):
 
 
 def formatConsensus(alnReader, refWindow, alns, refTable):
-    cssObj = consensus(alnReader, refWindow, alns, refTable)
+    cssObj = consensus(alnReader, refWindow, refTable, alns)
     print "     CSS  " + cssObj.sequence
     print " " * 10 + spark(cssObj.confidence)
 
